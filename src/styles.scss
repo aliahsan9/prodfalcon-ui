@@ -1,0 +1,61 @@
+@use 'styles/variables' as *;
+@use 'styles/theme';
+
+@use 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--pf-bg);
+  color: var(--pf-text);
+}
+
+body.theme-dark {
+  background: radial-gradient(ellipse at top, #1a1f35 0%, #{$dark-bg} 55%);
+}
+
+a {
+  color: $primary;
+  text-decoration: none;
+}
+
+.pf-card {
+  background: var(--pf-card);
+  border: 1px solid var(--pf-border);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-soft;
+  padding: 1.25rem;
+}
+
+.pf-gradient-text {
+  background: $gradient-primary;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.badge-severity-critical { background: rgba($danger, 0.2); color: #fca5a5; }
+.badge-severity-high { background: rgba($warning, 0.2); color: #fcd34d; }
+.badge-severity-medium { background: rgba($info, 0.2); color: #7dd3fc; }
+.badge-severity-low { background: rgba($success, 0.2); color: #86efac; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--pf-card) 25%, var(--pf-card-hover) 50%, var(--pf-card-hover) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: $radius-md;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

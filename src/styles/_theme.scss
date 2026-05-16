@@ -1,0 +1,21 @@
+@use 'variables' as *;
+
+body.theme-dark {
+  --pf-bg: #{$dark-bg};
+  --pf-bg-elevated: #{$dark-bg-elevated};
+  --pf-card: #{$card-bg};
+  --pf-card-hover: #{$card-bg-hover};
+  --pf-border: #{$border-color};
+  --pf-text: #{$text-primary};
+  --pf-text-muted: #{$text-muted};
+}
+
+body.theme-light {
+  --pf-bg: #f8fafc;
+  --pf-bg-elevated: #ffffff;
+  --pf-card: #ffffff;
+  --pf-card-hover: #f1f5f9;
+  --pf-border: rgba(15, 23, 42, 0.1);
+  --pf-text: #0f172a;
+  --pf-text-muted: #64748b;
+}
