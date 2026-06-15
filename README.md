@@ -2,7 +2,9 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.15.
 
-## Development server
+## Development server<img width="1920" height="1080" alt="prodfalcon" src="https://github.com/user-attachments/assets/0f1a21ab-c8c3-4993-a4af-fa978da3cff8" />
+
+
 
 To start a local development server, run:
 
