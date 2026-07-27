@@ -24,12 +24,15 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
         actionRoute="/projects"
         icon="bi-search" />
     } @else {
-      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2 pf-fade-in">
-        <div>
+      <div class="d-flex justify-content-between align-items-start mb-3 mb-md-4 flex-wrap gap-2 pf-fade-in">
+        <div class="min-w-0">
           <h1 class="h3 mb-1 pf-page-title">Scan #{{ scan()!.scanResultId }}</h1>
-          <p class="text-muted small mb-0">{{ scan()!.projectPath }} · {{ scan()!.status }} · {{ scan()!.durationMs }}ms</p>
+          <p class="text-muted small mb-0 pf-break-word">
+            <span class="pf-truncate-path d-inline-block" style="max-width: min(100%, 420px); vertical-align: bottom;">{{ scan()!.projectPath }}</span>
+            · {{ scan()!.status }} · {{ scan()!.durationMs }}ms
+          </p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap w-100 w-sm-auto scan-actions">
           <a routerLink="/projects" class="btn btn-outline-secondary btn-sm">Projects</a>
           <a [routerLink]="['/ai-suggestions']" [queryParams]="{ scanResultId: scan()!.scanResultId }" class="btn btn-primary btn-sm">
             <i class="bi bi-robot me-1"></i> AI suggestions
@@ -37,20 +40,20 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
         </div>
       </div>
 
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md">
+      <div class="row g-2 g-md-3 mb-4">
+        <div class="col-12 col-sm-6 col-md">
           <app-score-card label="Overall" [score]="scan()!.overallScore" variant="circular" />
         </div>
-        <div class="col-6 col-md"><app-score-card label="Security" [score]="scan()!.securityScore" icon="bi-shield-lock" /></div>
-        <div class="col-6 col-md"><app-score-card label="Maintainability" [score]="scan()!.maintainabilityScore" icon="bi-tools" /></div>
-        <div class="col-6 col-md"><app-score-card label="Performance" [score]="scan()!.performanceScore" icon="bi-lightning" /></div>
-        <div class="col-6 col-md"><app-score-card label="Production" [score]="scan()!.productionReadinessScore" icon="bi-rocket" /></div>
+        <div class="col-6 col-md"><app-score-card label="Security" [score]="scan()!.securityScore" icon="bi-shield-lock" [compact]="true" /></div>
+        <div class="col-6 col-md"><app-score-card label="Maintainability" [score]="scan()!.maintainabilityScore" icon="bi-tools" [compact]="true" /></div>
+        <div class="col-6 col-md"><app-score-card label="Performance" [score]="scan()!.performanceScore" icon="bi-lightning" [compact]="true" /></div>
+        <div class="col-6 col-md"><app-score-card label="Production" [score]="scan()!.productionReadinessScore" icon="bi-rocket" [compact]="true" /></div>
       </div>
 
       <div class="pf-card mb-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <h2 class="h6 mb-0">{{ scan()!.totalIssues }} issues found</h2>
-          <div class="d-flex gap-1 flex-wrap">
+          <div class="d-flex gap-1 flex-wrap severity-filters">
             @for (sev of severityFilters; track sev) {
               <button
                 type="button"
@@ -71,10 +74,10 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
           @for (issue of filteredIssues(cat.key); track issue.title + issue.filePath + (issue.lineNumber ?? 0)) {
             <div class="issue-item border-bottom py-3" style="border-color: var(--pf-border) !important;">
               <div class="d-flex justify-content-between gap-2 flex-wrap">
-                <strong>{{ issue.title }}</strong>
-                <span class="badge badge-severity-{{ issue.severity.toLowerCase() }}">{{ issue.severity }}</span>
+                <strong class="pf-break-word">{{ issue.title }}</strong>
+                <span class="badge badge-severity-{{ issue.severity.toLowerCase() }} flex-shrink-0">{{ issue.severity }}</span>
               </div>
-              <p class="small text-muted mb-1">{{ issue.ruleName }} · {{ issue.filePath }}@if (issue.lineNumber) { :{{ issue.lineNumber }} }</p>
+              <p class="small text-muted mb-1 pf-break-word">{{ issue.ruleName }} · {{ issue.filePath }}@if (issue.lineNumber) { :{{ issue.lineNumber }} }</p>
               <p class="small mb-1">{{ issue.description || 'Review and apply recommended fix.' }}</p>
               @if (issue.fixSuggestion) {
                 <p class="small mb-0 text-primary"><i class="bi bi-lightbulb me-1"></i>{{ issue.fixSuggestion }}</p>
@@ -86,7 +89,15 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
         </div>
       }
     }
-  `
+  `,
+  styles: [`
+    @media (min-width: 576px) {
+      .scan-actions { width: auto !important; }
+    }
+    .severity-filters .btn {
+      min-height: 36px;
+    }
+  `]
 })
 export class ScanDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);

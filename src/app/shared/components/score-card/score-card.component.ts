@@ -46,9 +46,9 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
     </div>
   `,
   styles: [`
-    .score-card { outline: none; }
+    .score-card { outline: none; min-width: 0; }
     .score-card:focus-visible { box-shadow: 0 0 0 2px var(--pf-primary); }
-    .score-value { letter-spacing: -0.03em; }
+    .score-value { letter-spacing: -0.03em; font-size: clamp(1.5rem, 4vw, 2.5rem); }
     .ring { width: 72px; height: 72px; transform: rotate(-90deg); flex-shrink: 0; }
     .ring-track { fill: none; stroke: var(--pf-border); stroke-width: 7; }
     .ring-value {
@@ -63,6 +63,10 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
       font-weight: 700;
     }
     .progress-bar { transition: width 0.8s ease; }
+    @media (max-width: 575px) {
+      .ring { width: 56px; height: 56px; }
+      .score-card--compact .score-value { font-size: 1.35rem; }
+    }
   `]
 })
 export class ScoreCardComponent {

@@ -131,6 +131,9 @@ import { ToastService } from '../../../core/services/toast.service';
     .auth-card {
       border-radius: 16px;
     }
+    .auth-page {
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    }
   `]
 })
 export class RegisterComponent {

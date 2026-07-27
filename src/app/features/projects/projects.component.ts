@@ -62,7 +62,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
                   <div class="project-avatar">{{ initials(p.fileName) }}</div>
                   <h2 class="h6 mb-0 text-truncate">{{ p.fileName }}</h2>
                 </div>
-                <span class="badge" [class]="healthClass(p)">{{ health(p) }}</span>
+                <span class="badge flex-shrink-0" [class]="healthClass(p)">{{ health(p) }}</span>
               </div>
               <p class="small text-muted mb-2">
                 Last scan: {{ p.uploadedAt | date:'medium' }} · {{ p.scanCount }} scan(s)
@@ -79,7 +79,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
                      [class.bg-warning]="p.latestScore >= 60 && p.latestScore < 80"
                      [class.bg-danger]="p.latestScore < 60"></div>
               </div>
-              <div class="d-flex gap-2">
+              <div class="d-flex gap-2 flex-wrap">
                 @if (p.latestScanResultId) {
                   <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-outline-primary btn-sm">View scan</a>
                 }
@@ -101,11 +101,14 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
     }
   `,
   styles: [`
-    .project-card { transition: transform .2s, box-shadow .2s; }
+    .project-card { transition: transform .2s, box-shadow .2s; min-width: 0; }
     .project-avatar {
       width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
       display: grid; place-items: center; font-size: .75rem; font-weight: 700;
       background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
+    }
+    @media (max-width: 575px) {
+      .project-card .btn { flex: 1 1 auto; }
     }
   `]
 })

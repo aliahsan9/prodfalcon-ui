@@ -11,27 +11,31 @@ import { ToastService } from '../../core/services/toast.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="navbar px-3 py-2 d-flex align-items-center justify-content-between pf-card-glass">
-      <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none" (click)="menuToggle.emit()" aria-label="Toggle menu">
+    <header class="navbar px-2 px-sm-3 py-2 d-flex align-items-center justify-content-between gap-2 pf-card-glass">
+      <div class="d-flex align-items-center gap-1 gap-sm-2 min-w-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm nav-icon-btn d-lg-none" (click)="menuToggle.emit()" aria-label="Toggle menu">
           <i class="bi bi-list"></i>
         </button>
         <a routerLink="/upload" class="btn btn-primary btn-sm">
-          <i class="bi bi-cloud-upload me-1"></i> <span class="d-none d-sm-inline">Upload ZIP</span>
+          <i class="bi bi-cloud-upload"></i>
+          <span class="d-none d-sm-inline ms-1">Upload ZIP</span>
         </a>
-        <span class="badge rounded-pill text-bg-secondary">{{ tier }} Plan</span>
+        <span class="badge rounded-pill text-bg-secondary d-none d-sm-inline-flex">{{ tier }} Plan</span>
       </div>
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0">
         <button
           type="button"
-          class="btn btn-outline-secondary btn-sm theme-toggle"
+          class="btn btn-outline-secondary btn-sm nav-icon-btn"
           (click)="toggleTheme()"
           [attr.aria-label]="'Switch to ' + (theme.mode() === 'dark' ? 'light' : 'dark') + ' mode'">
           <i class="bi" [class.bi-moon-stars-fill]="theme.mode() === 'dark'" [class.bi-sun-fill]="theme.mode() === 'light'"></i>
-          <span class="d-none d-md-inline ms-1">{{ theme.mode() === 'dark' ? 'Dark' : 'Light' }}</span>
+          <span class="d-none d-lg-inline ms-1">{{ theme.mode() === 'dark' ? 'Dark' : 'Light' }}</span>
         </button>
-        <span class="text-muted small d-none d-md-inline">{{ auth.userEmail() }}</span>
-        <button type="button" class="btn btn-outline-danger btn-sm" (click)="logout()">Logout</button>
+        <span class="text-muted small d-none d-xl-inline text-truncate" style="max-width: 160px;">{{ auth.userEmail() }}</span>
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="logout()" aria-label="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="d-none d-md-inline ms-1">Logout</span>
+        </button>
       </div>
     </header>
   `,
@@ -42,8 +46,24 @@ import { ToastService } from '../../core/services/toast.service';
       top: 0;
       z-index: 50;
       border-radius: 0;
+      min-height: 52px;
+      padding-top: max(0.5rem, env(safe-area-inset-top));
     }
-    .theme-toggle { min-width: 2.5rem; }
+    .nav-icon-btn {
+      width: 2.25rem;
+      height: 2.25rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (min-width: 992px) {
+      .nav-icon-btn {
+        width: auto;
+        height: auto;
+        padding: 0.25rem 0.5rem;
+      }
+    }
   `]
 })
 export class NavbarComponent {

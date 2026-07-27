@@ -65,7 +65,7 @@ Chart.register(...registerables);
     } @else {
       <!-- Overall health hero -->
       <div class="row g-3 mb-3">
-        <div class="col-lg-4">
+        <div class="col-12 col-lg-4">
           <app-score-card
             label="Overall Health Score"
             [score]="summary()!.averageScore"
@@ -76,20 +76,20 @@ Chart.register(...registerables);
             hint="Production readiness pulse"
             (cardClick)="openMetric($event)" />
         </div>
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8">
           <div class="pf-card h-100 d-flex flex-column justify-content-center">
-            <div class="row text-center g-3">
+            <div class="row text-center g-2 g-sm-3">
               <div class="col-4">
                 <div class="text-muted small">Projects</div>
-                <div class="h3 mb-0">{{ summary()!.totalProjects }}</div>
+                <div class="h4 mb-0">{{ summary()!.totalProjects }}</div>
               </div>
               <div class="col-4">
                 <div class="text-muted small">Scans</div>
-                <div class="h3 mb-0">{{ summary()!.totalScans }}</div>
+                <div class="h4 mb-0">{{ summary()!.totalScans }}</div>
               </div>
               <div class="col-4">
                 <div class="text-muted small">Issues</div>
-                <div class="h3 mb-0">{{ summary()!.totalIssues }}</div>
+                <div class="h4 mb-0">{{ summary()!.totalIssues }}</div>
               </div>
             </div>
           </div>
@@ -97,7 +97,7 @@ Chart.register(...registerables);
       </div>
 
       <!-- Metric grid -->
-      <div class="row g-3 mb-4">
+      <div class="row g-2 g-md-3 mb-4">
         @for (m of metrics(); track m.key) {
           <div class="col-6 col-md-4 col-xl-3">
             <app-score-card
@@ -105,6 +105,7 @@ Chart.register(...registerables);
               [score]="m.score"
               [icon]="m.icon"
               [clickable]="true"
+              [compact]="true"
               [metricKey]="m.key"
               (cardClick)="openMetric($event)" />
           </div>
@@ -113,51 +114,61 @@ Chart.register(...registerables);
 
       <!-- Charts -->
       <div class="row g-3 mb-4">
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8">
           <div class="pf-card">
             <h2 class="h6 mb-3">Risk over time</h2>
-            <canvas #trendChart height="110"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #trendChart height="110"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3">Issue categories</h2>
-            <canvas #categoryChart height="200"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #categoryChart height="200"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
           <div class="pf-card">
             <h2 class="h6 mb-3">Architecture quality</h2>
-            <canvas #radarChart height="200"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #radarChart height="200"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
           <div class="pf-card">
             <h2 class="h6 mb-3">Security categories</h2>
-            <canvas #severityChart height="200"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #severityChart height="200"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-12 col-sm-6 col-lg-4">
           <div class="pf-card">
             <h2 class="h6 mb-3">Top violated rules</h2>
-            <canvas #rulesChart height="200"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #rulesChart height="200"></canvas>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Widgets -->
       <div class="row g-3 mb-4">
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-clock-history me-1"></i> Recent scans</h2>
             <ul class="pf-widget-list">
               @for (p of projects().slice(0, 5); track p.projectId) {
                 <li>
-                  <div class="text-truncate">
+                  <div class="text-truncate min-w-0">
                     <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.fileName }}</a>
                     <div class="small text-muted">{{ p.uploadedAt | date:'mediumDate' }}</div>
                   </div>
-                  <span class="badge text-bg-secondary">{{ p.latestScore }}</span>
+                  <span class="badge text-bg-secondary flex-shrink-0">{{ p.latestScore }}</span>
                 </li>
               } @empty {
                 <li class="text-muted small">No recent scans</li>
@@ -165,17 +176,17 @@ Chart.register(...registerables);
             </ul>
           </div>
         </div>
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-exclamation-triangle me-1"></i> Top risky projects</h2>
             <ul class="pf-widget-list">
               @for (p of riskyProjects(); track p.projectId) {
                 <li>
-                  <div class="text-truncate">
+                  <div class="text-truncate min-w-0">
                     <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.fileName }}</a>
                     <div class="small text-muted">{{ p.issueCount }} issues · {{ p.trend }}</div>
                   </div>
-                  <span class="badge" [class]="riskBadge(p.latestScore)">{{ p.latestScore }}</span>
+                  <span class="badge flex-shrink-0" [class]="riskBadge(p.latestScore)">{{ p.latestScore }}</span>
                 </li>
               } @empty {
                 <li class="text-muted small">No projects</li>
@@ -183,31 +194,31 @@ Chart.register(...registerables);
             </ul>
           </div>
         </div>
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-robot me-1"></i> AI recommendations</h2>
             <ul class="pf-widget-list">
               @for (rec of summary()!.aiRecommendations; track rec) {
-                <li class="small">{{ rec }}</li>
+                <li class="small pf-break-word">{{ rec }}</li>
               }
             </ul>
             <a routerLink="/ai-suggestions" class="btn btn-outline-primary btn-sm mt-2">Open AI assistant</a>
           </div>
         </div>
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-cloud-upload me-1"></i> Latest uploads</h2>
             <ul class="pf-widget-list">
               @for (p of projects().slice(0, 5); track p.projectId + '-up') {
                 <li>
-                  <span class="text-truncate">{{ p.fileName }}</span>
-                  <span class="small text-muted">{{ p.status }}</span>
+                  <span class="text-truncate min-w-0">{{ p.fileName }}</span>
+                  <span class="small text-muted flex-shrink-0">{{ p.status }}</span>
                 </li>
               }
             </ul>
           </div>
         </div>
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-shield-exclamation me-1"></i> Security alerts</h2>
             <ul class="pf-widget-list">
@@ -222,7 +233,7 @@ Chart.register(...registerables);
             </ul>
           </div>
         </div>
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
             <h2 class="h6 mb-3"><i class="bi bi-stack me-1"></i> Technical debt</h2>
             <div class="display-6 fw-bold">{{ summary()!.technicalDebtScore }}</div>
@@ -237,9 +248,9 @@ Chart.register(...registerables);
 
       <!-- Recent projects table -->
       <div class="pf-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
           <h2 class="h6 mb-0">Recent projects</h2>
-          <a routerLink="/projects" class="small">View all</a>
+          <a routerLink="/projects" class="small flex-shrink-0">View all</a>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -247,20 +258,20 @@ Chart.register(...registerables);
               <tr>
                 <th>Project</th>
                 <th>Score</th>
-                <th>Security</th>
-                <th>Issues</th>
-                <th>Trend</th>
+                <th class="d-none d-md-table-cell">Security</th>
+                <th class="d-none d-sm-table-cell">Issues</th>
+                <th class="d-none d-lg-table-cell">Trend</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               @for (p of projects().slice(0, 8); track p.projectId) {
                 <tr>
-                  <td class="text-truncate" style="max-width: 220px;">{{ p.fileName }}</td>
+                  <td class="text-truncate" style="max-width: 140px;">{{ p.fileName }}</td>
                   <td>{{ p.latestScore }}/100</td>
-                  <td>{{ p.latestSecurityScore ?? '—' }}</td>
-                  <td>{{ p.issueCount }}</td>
-                  <td><span class="badge text-bg-secondary">{{ p.trend }}</span></td>
+                  <td class="d-none d-md-table-cell">{{ p.latestSecurityScore ?? '—' }}</td>
+                  <td class="d-none d-sm-table-cell">{{ p.issueCount }}</td>
+                  <td class="d-none d-lg-table-cell"><span class="badge text-bg-secondary">{{ p.trend }}</span></td>
                   <td>
                     @if (p.latestScanResultId) {
                       <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-sm btn-outline-primary">Open</a>
@@ -458,11 +469,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         options: {
           responsive: true,
-          plugins: { legend: { labels: { color: muted } } },
+          maintainAspectRatio: true,
+          plugins: { legend: { labels: { color: muted, boxWidth: 12 } } },
           scales: {
-            x: { ticks: { color: muted }, grid: { color: gridColor } },
+            x: { ticks: { color: muted, maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }, grid: { color: gridColor } },
             y: { min: 0, max: 100, ticks: { color: muted }, grid: { color: gridColor } },
-            y1: { position: 'right', ticks: { color: muted }, grid: { drawOnChartArea: false } }
+            y1: { position: 'right', ticks: { color: muted, maxTicksLimit: 5 }, grid: { drawOnChartArea: false } }
           }
         }
       }));

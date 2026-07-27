@@ -17,7 +17,10 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
       grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
       gap: 1rem;
     }
-    @media (max-width: 767px) {
+    @media (max-width: 991px) {
+      .skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 575px) {
       .skeleton-grid { grid-template-columns: 1fr; }
     }
   `]

@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
         <div class="locked-mask">
           <i class="bi bi-lock-fill fs-3 mb-2"></i>
           <p class="mb-2">{{ message }}</p>
-          <a routerLink="/billing" class="btn btn-sm btn-outline-light">Upgrade</a>
+          <a routerLink="/billing" class="btn btn-sm btn-primary">Upgrade</a>
         </div>
       }
     </div>

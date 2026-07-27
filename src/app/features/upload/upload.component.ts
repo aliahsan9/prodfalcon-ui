@@ -79,16 +79,28 @@ interface UploadSource {
     .upload-zone {
       border: 2px dashed var(--pf-border);
       border-radius: 16px;
-      padding: 3rem 1rem;
+      padding: 2rem 1rem;
       text-align: center;
       transition: border-color .2s, background .2s;
     }
     .upload-zone.dragging { border-color: #8b5cf6; background: rgba(99,102,241,.08); }
     .source-card {
-      cursor: pointer; min-height: 120px;
+      cursor: pointer;
+      min-height: 100px;
     }
     .source-card:disabled { opacity: 0.55; cursor: not-allowed; }
     .source-card.active { border-color: var(--pf-primary); box-shadow: 0 0 0 1px var(--pf-primary); }
+    @media (min-width: 768px) {
+      .upload-zone { padding: 3rem 1.5rem; }
+      .source-card { min-height: 120px; }
+    }
+    @media (max-width: 575px) {
+      .source-card {
+        min-height: 90px;
+        padding: 0.85rem !important;
+      }
+      .source-card .fs-4 { font-size: 1.25rem !important; }
+    }
   `]
 })
 export class UploadComponent {

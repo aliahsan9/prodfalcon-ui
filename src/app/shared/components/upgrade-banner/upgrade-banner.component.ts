@@ -20,6 +20,11 @@ import { RouterLink } from '@angular/router';
       border: 1px dashed rgba(99, 102, 241, 0.5);
       background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(6,182,212,.08));
     }
+    @media (max-width: 575px) {
+      .upgrade-banner a.btn {
+        width: 100%;
+      }
+    }
   `]
 })
 export class UpgradeBannerComponent {

@@ -8,15 +8,15 @@ import { SubscriptionTier } from '../../core/models/billing.model';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="h3 mb-1">Billing</h1>
-    <p class="text-muted mb-4">Manage your subscription and usage</p>
+    <h1 class="h3 mb-1 pf-page-title">Billing</h1>
+    <p class="text-muted mb-3 mb-md-4">Manage your subscription and usage</p>
 
     <div class="row g-3 mb-4">
       @for (plan of plans; track plan.name) {
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
           <div class="pf-card h-100" [class.border-primary]="plan.tier === currentTier()">
             <h2 class="h5">{{ plan.name }}</h2>
-            <p class="display-6 fw-bold">{{ plan.price }}<span class="fs-6 text-muted">/mo</span></p>
+            <p class="display-6 fw-bold plan-price">{{ plan.price }}<span class="fs-6 text-muted">/mo</span></p>
             <ul class="small text-muted list-unstyled mb-3">
               @for (f of plan.features; track f) { <li><i class="bi bi-check2 text-success me-1"></i>{{ f }}</li> }
             </ul>
@@ -36,7 +36,12 @@ import { SubscriptionTier } from '../../core/models/billing.model';
         <div class="progress-bar" [style.width.%]="usagePercent()"></div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    @media (max-width: 575px) {
+      .plan-price { font-size: 2rem; }
+    }
+  `]
 })
 export class BillingComponent implements OnInit {
   private readonly billing = inject(BillingService);

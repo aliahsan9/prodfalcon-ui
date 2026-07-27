@@ -18,15 +18,30 @@ import { ToastService } from '../../../core/services/toast.service';
   styles: [`
     .toast-stack {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
+      top: max(0.75rem, env(safe-area-inset-top));
+      right: max(0.75rem, env(safe-area-inset-right));
+      left: auto;
       z-index: 1080;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-width: 380px;
+      width: min(380px, calc(100vw - 1.5rem));
+      max-width: 100%;
+      pointer-events: none;
     }
-    .toast-item { border-radius: 12px; margin: 0; }
+    .toast-item {
+      border-radius: 12px;
+      margin: 0;
+      pointer-events: auto;
+      word-break: break-word;
+    }
+    @media (max-width: 575px) {
+      .toast-stack {
+        left: max(0.75rem, env(safe-area-inset-left));
+        right: max(0.75rem, env(safe-area-inset-right));
+        width: auto;
+      }
+    }
   `]
 })
 export class ToastContainerComponent {
@@ -44,4 +59,3 @@ export class ToastContainerComponent {
     return type === 'error' ? 'danger' : type;
   }
 }
-

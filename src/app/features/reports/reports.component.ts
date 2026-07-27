@@ -49,34 +49,38 @@ Chart.register(...registerables);
       </div>
 
       <div class="row g-3 mt-1">
-        <div class="col-lg-6">
+        <div class="col-12 col-lg-6">
           <div class="pf-card">
             <h2 class="h6 mb-3">Issues by severity</h2>
-            <canvas #severityChart height="180"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #severityChart height="180"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-12 col-lg-6">
           <div class="pf-card">
             <h2 class="h6 mb-3">Issues by category</h2>
-            <canvas #categoryChart height="180"></canvas>
+            <div class="pf-chart-wrap">
+              <canvas #categoryChart height="180"></canvas>
+            </div>
           </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-12 col-lg-6">
           <div class="pf-card">
             <h2 class="h6">Severity breakdown</h2>
             @for (item of severityEntries(); track item[0]) {
-              <div class="d-flex justify-content-between small py-2 border-bottom" style="border-color: var(--pf-border) !important;">
-                <span>{{ item[0] }}</span><span class="badge badge-severity-{{ item[0].toLowerCase() }}">{{ item[1] }}</span>
+              <div class="d-flex justify-content-between small py-2 border-bottom gap-2" style="border-color: var(--pf-border) !important;">
+                <span>{{ item[0] }}</span><span class="badge badge-severity-{{ item[0].toLowerCase() }} flex-shrink-0">{{ item[1] }}</span>
               </div>
             }
           </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-12 col-lg-6">
           <div class="pf-card">
             <h2 class="h6">Top violated rules</h2>
             @for (item of ruleEntries(); track item[0]) {
-              <div class="d-flex justify-content-between small py-2 border-bottom" style="border-color: var(--pf-border) !important;">
-                <span class="text-truncate me-2">{{ item[0] }}</span><span>{{ item[1] }}</span>
+              <div class="d-flex justify-content-between small py-2 border-bottom gap-2" style="border-color: var(--pf-border) !important;">
+                <span class="text-truncate me-2 min-w-0">{{ item[0] }}</span><span class="flex-shrink-0">{{ item[1] }}</span>
               </div>
             }
           </div>
@@ -139,7 +143,11 @@ export class ReportsComponent implements OnInit, AfterViewInit, OnDestroy {
           labels: sev.map((e) => e[0]),
           datasets: [{ data: sev.map((e) => e[1]), backgroundColor: ['#ef4444', '#f59e0b', '#38bdf8', '#22c55e'] }]
         },
-        options: { plugins: { legend: { labels: { color: muted } } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { labels: { color: muted, boxWidth: 12 } } }
+        }
       }));
     }
 
@@ -152,9 +160,11 @@ export class ReportsComponent implements OnInit, AfterViewInit, OnDestroy {
           datasets: [{ data: cats.map((e) => e[1]), backgroundColor: '#6366f1', borderRadius: 8 }]
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: true,
           plugins: { legend: { display: false } },
           scales: {
-            x: { ticks: { color: muted } },
+            x: { ticks: { color: muted, maxRotation: 45, autoSkip: true, maxTicksLimit: 6 } },
             y: { ticks: { color: muted } }
           }
         }

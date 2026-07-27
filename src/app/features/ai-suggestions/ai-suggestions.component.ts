@@ -12,8 +12,8 @@ import { LockedFeatureComponent } from '../../shared/components/locked-feature/l
   imports: [UpgradeBannerComponent, LockedFeatureComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="h3 mb-1">AI code suggestions</h1>
-    <p class="text-muted mb-4">Premium remediation powered by OpenAI</p>
+    <h1 class="h3 mb-1 pf-page-title">AI code suggestions</h1>
+    <p class="text-muted mb-3 mb-md-4">Premium remediation powered by OpenAI</p>
 
     @if (!billing.isProFeature()) {
       <app-upgrade-banner class="mb-4 d-block" />
@@ -22,34 +22,34 @@ import { LockedFeatureComponent } from '../../shared/components/locked-feature/l
     <app-locked-feature [locked]="!billing.isProFeature()">
       <div class="pf-card mb-3">
         <label class="form-label">Scan result ID</label>
-        <div class="input-group">
+        <div class="d-flex flex-column flex-sm-row gap-2">
           <input type="number" class="form-control" [value]="scanResultId()" (change)="setId($event)" />
-          <button class="btn btn-primary" (click)="load()" [disabled]="loading()">Generate</button>
+          <button class="btn btn-primary flex-shrink-0" (click)="load()" [disabled]="loading()">Generate</button>
         </div>
       </div>
 
       @if (summary()) {
         <div class="pf-card mb-3 border-primary">
-          <p class="mb-0 fw-semibold">{{ summary() }}</p>
+          <p class="mb-0 fw-semibold pf-break-word">{{ summary() }}</p>
         </div>
       }
 
       <div class="row g-3">
         @for (card of cards(); track card.title + card.description) {
-          <div class="col-lg-6">
+          <div class="col-12 col-lg-6">
             <div class="pf-card h-100">
-              <div class="d-flex justify-content-between mb-2">
+              <div class="d-flex justify-content-between mb-2 gap-2 flex-wrap">
                 <span class="badge text-bg-primary">{{ card.category }}</span>
                 <span class="small text-danger">{{ card.severityImpact }} impact</span>
               </div>
               <h2 class="h6">{{ card.title }}</h2>
               <p class="small text-muted">{{ card.description }}</p>
               <div class="row g-2">
-                <div class="col-6">
+                <div class="col-12 col-md-6">
                   <div class="small text-muted mb-1">Before</div>
                   <pre class="code-snippet">{{ card.beforeCode }}</pre>
                 </div>
-                <div class="col-6">
+                <div class="col-12 col-md-6">
                   <div class="small text-muted mb-1">After</div>
                   <pre class="code-snippet code-after">{{ card.afterCode }}</pre>
                 </div>
@@ -62,8 +62,16 @@ import { LockedFeatureComponent } from '../../shared/components/locked-feature/l
   `,
   styles: [`
     .code-snippet {
-      background: #0f172a; border-radius: 8px; padding: .75rem;
-      font-size: .75rem; color: #fca5a5; margin: 0;
+      background: #0f172a;
+      border-radius: 8px;
+      padding: .75rem;
+      font-size: .75rem;
+      color: #fca5a5;
+      margin: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre;
+      max-width: 100%;
     }
     .code-after { color: #86efac; }
   `]
