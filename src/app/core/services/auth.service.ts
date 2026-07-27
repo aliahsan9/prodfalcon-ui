@@ -10,13 +10,12 @@ import {
   UserSession
 } from '../models/auth.model';
 
+const SESSION_KEY = 'prodfalcon-session';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
-  private readonly tokenKey = 'prodfalcon-token';
-  private readonly emailKey = 'prodfalcon-email';
 
   private readonly session = signal<UserSession | null>(this.readSession());
 
@@ -24,42 +23,44 @@ export class AuthService {
 
   readonly userEmail = computed(() => this.session()?.email ?? '');
 
+  readonly authState = computed(() => this.session());
+
+  readonly tenantId = computed(() => this.session()?.tenantId ?? '');
+
+  readonly organization = computed(() => this.session()?.organization ?? '');
+
+  readonly role = computed(() => this.session()?.role ?? '');
+
+  readonly plan = computed(() => this.session()?.plan ?? 'Free');
+
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router
   ) {}
 
   login(payload: LoginRequest): Observable<AuthResponse> {
-
     return this.http.post<AuthResponse>(
       `${environment.apiUrl}/auth/login`,
       payload
     ).pipe(
-      tap((res) => {
-        this.persist(res);
-      })
+      tap((res) => this.persist(res))
     );
   }
 
   register(payload: RegisterRequest): Observable<AuthResponse> {
-
     return this.http.post<AuthResponse>(
       `${environment.apiUrl}/auth/register`,
       payload
     ).pipe(
-      tap((res) => {
-        this.persist(res);
-      })
+      tap((res) => this.persist(res))
     );
   }
 
   logout(): void {
-
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.emailKey);
-
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('prodfalcon-token');
+    localStorage.removeItem('prodfalcon-email');
     this.session.set(null);
-
     this.router.navigateByUrl('/auth/login');
   }
 
@@ -67,31 +68,46 @@ export class AuthService {
     return this.session()?.token ?? null;
   }
 
+  handleUnauthorized(): void {
+    this.logout();
+  }
+
+  handleForbidden(): void {
+    this.router.navigateByUrl('/dashboard');
+  }
+
   private persist(data: AuthResponse): void {
-
-    localStorage.setItem(this.tokenKey, data.token);
-
-    localStorage.setItem(this.emailKey, data.email);
-
-    this.session.set({
+    const session: UserSession = {
       email: data.email,
-      token: data.token
-    });
+      token: data.token,
+      fullName: data.fullName ?? '',
+      tenantId: data.tenantId,
+      organization: data.organization ?? '',
+      role: data.role ?? '',
+      plan: data.plan ?? 'Free',
+      isSuperAdmin: !!data.isSuperAdmin
+    };
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    this.session.set(session);
   }
 
   private readSession(): UserSession | null {
-
-    const token = localStorage.getItem(this.tokenKey);
-
-    const email = localStorage.getItem(this.emailKey);
-
-    if (!token || !email) {
-      return null;
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as UserSession;
+        if (parsed?.token && parsed?.email && parsed?.tenantId) {
+          return parsed;
+        }
+      } catch {
+        localStorage.removeItem(SESSION_KEY);
+      }
     }
 
-    return {
-      token,
-      email
-    };
+    // Legacy keys — force re-login so JWT includes tenant claims.
+    localStorage.removeItem('prodfalcon-token');
+    localStorage.removeItem('prodfalcon-email');
+    return null;
   }
 }

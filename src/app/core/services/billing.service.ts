@@ -11,15 +11,14 @@ export class BillingService {
 
   constructor(private readonly http: HttpClient) {}
 
-  loadSubscription(userId = 0): Observable<ApiResponse<SubscriptionInfo>> {
+  loadSubscription(): Observable<ApiResponse<SubscriptionInfo>> {
     return this.http
-      .get<ApiResponse<SubscriptionInfo>>(`${environment.apiUrl}/billing/subscription`, { params: { userId } })
+      .get<ApiResponse<SubscriptionInfo>>(`${environment.apiUrl}/billing/subscription`)
       .pipe(tap((res) => { if (res.success) this.subscription.set(res.data); }));
   }
 
-  createCheckout(userId: number, tier: string): Observable<ApiResponse<{ checkoutUrl: string }>> {
+  createCheckout(tier: string): Observable<ApiResponse<{ checkoutUrl: string }>> {
     return this.http.post<ApiResponse<{ checkoutUrl: string }>>(`${environment.apiUrl}/stripe/checkout`, {
-      userId,
       tier: tier === 'Pro' ? 1 : tier === 'Enterprise' ? 2 : 0
     });
   }
@@ -29,4 +28,3 @@ export class BillingService {
     return tier === 'Pro' || tier === 'Enterprise';
   }
 }
-

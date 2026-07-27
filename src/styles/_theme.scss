@@ -8,14 +8,50 @@ body.theme-dark {
   --pf-border: #{$border-color};
   --pf-text: #{$text-primary};
   --pf-text-muted: #{$text-muted};
+  --pf-primary: #{$primary};
+  --pf-primary-soft: #{$primary-soft};
+  --pf-violet: #{$violet};
+  --pf-cyan: #{$cyan};
+  --pf-success: #{$success};
+  --pf-warning: #{$warning};
+  --pf-danger: #{$danger};
+  --pf-info: #{$info};
+  --pf-shadow: #{$shadow-soft};
+  --pf-glass: rgba(17, 24, 39, 0.72);
+  --pf-glass-border: rgba(148, 163, 184, 0.12);
+  --pf-input-bg: #0f1623;
+  --pf-table-bg: transparent;
+  --pf-chart-grid: rgba(148, 163, 184, 0.12);
+  --pf-skeleton-a: #{$card-bg};
+  --pf-skeleton-b: #{$card-bg-hover};
+  --pf-overlay: rgba(2, 6, 23, 0.65);
+  color-scheme: dark;
 }
 
 body.theme-light {
-  --pf-bg: #f8fafc;
-  --pf-bg-elevated: #ffffff;
-  --pf-card: #ffffff;
-  --pf-card-hover: #f1f5f9;
-  --pf-border: rgba(15, 23, 42, 0.1);
-  --pf-text: #0f172a;
-  --pf-text-muted: #64748b;
+  --pf-bg: #{$light-bg};
+  --pf-bg-elevated: #{$light-bg-elevated};
+  --pf-card: #{$light-card};
+  --pf-card-hover: #{$light-card-hover};
+  --pf-border: #{$light-border};
+  --pf-text: #{$light-text};
+  --pf-text-muted: #{$light-text-muted};
+  --pf-primary: #{$primary};
+  --pf-primary-soft: #{$primary-soft};
+  --pf-violet: #{$violet};
+  --pf-cyan: #{$cyan};
+  --pf-success: #{$success};
+  --pf-warning: #{$warning};
+  --pf-danger: #{$danger};
+  --pf-info: #{$info};
+  --pf-shadow: #{$shadow-glass};
+  --pf-glass: rgba(255, 255, 255, 0.82);
+  --pf-glass-border: rgba(15, 23, 42, 0.08);
+  --pf-input-bg: #ffffff;
+  --pf-table-bg: transparent;
+  --pf-chart-grid: rgba(15, 23, 42, 0.08);
+  --pf-skeleton-a: #e2e8f0;
+  --pf-skeleton-b: #f1f5f9;
+  --pf-overlay: rgba(15, 23, 42, 0.4);
+  color-scheme: light;
 }

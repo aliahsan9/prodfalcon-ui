@@ -74,7 +74,7 @@ export class BillingComponent implements OnInit {
   }
 
   upgrade(tier: SubscriptionTier): void {
-    this.billing.createCheckout(0, tier).subscribe({
+    this.billing.createCheckout(tier).subscribe({
       next: (r) => {
         if (r.success) {
           this.toast.success('Checkout session created (stub).');

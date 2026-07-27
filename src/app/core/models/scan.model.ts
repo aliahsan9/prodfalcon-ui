@@ -38,8 +38,21 @@ export interface DashboardSummary {
   totalScans: number;
   totalIssues: number;
   averageScore: number;
+  averageSecurityScore: number;
+  averageMaintainabilityScore: number;
+  averagePerformanceScore: number;
+  averageProductionReadinessScore: number;
+  architectureScore: number;
+  documentationScore: number;
+  testCoverageScore: number;
+  technicalDebtScore: number;
+  codeSmellsScore: number;
+  complexityScore: number;
+  bugRiskScore: number;
   issuesBySeverity: Record<string, number>;
+  issuesByCategory: Record<string, number>;
   topViolatedRules: Record<string, number>;
+  aiRecommendations: string[];
 }
 
 export interface ScanTrend {
@@ -55,6 +68,10 @@ export interface ProjectSummary {
   uploadedAt: string;
   status: string;
   latestScore: number;
+  latestSecurityScore?: number;
+  latestMaintainabilityScore?: number;
+  latestPerformanceScore?: number;
+  latestProductionReadinessScore?: number;
   latestScanResultId: number;
   scanCount: number;
   issueCount: number;
@@ -63,3 +80,10 @@ export interface ProjectSummary {
 
 export type ProjectHealth = 'Healthy' | 'Warning' | 'Critical';
 
+export interface HealthMetric {
+  key: string;
+  label: string;
+  icon: string;
+  score: number;
+  description: string;
+}

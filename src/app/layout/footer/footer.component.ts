@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="footer text-center text-muted small py-3">
-      ProdFalcon © {{ year }} — Code quality & security for modern teams
+      ProdFalcon © {{ year }} — AI Software Quality Platform
     </footer>
   `,
   styles: [`.footer { border-top: 1px solid var(--pf-border); }`]

@@ -17,23 +17,55 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--pf-bg);
   color: var(--pf-text);
+  transition: background-color $transition-med, color $transition-med;
 }
 
 body.theme-dark {
-  background: radial-gradient(ellipse at top, #1a1f35 0%, #{$dark-bg} 55%);
+  background:
+    radial-gradient(ellipse at top, #1a1f35 0%, transparent 55%),
+    var(--pf-bg);
+}
+
+body.theme-light {
+  background:
+    radial-gradient(ellipse at top, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    var(--pf-bg);
 }
 
 a {
-  color: $primary;
+  color: var(--pf-primary);
   text-decoration: none;
+  transition: color $transition-fast;
+}
+
+a:hover {
+  color: var(--pf-violet);
 }
 
 .pf-card {
   background: var(--pf-card);
   border: 1px solid var(--pf-border);
   border-radius: $radius-lg;
-  box-shadow: $shadow-soft;
+  box-shadow: var(--pf-shadow);
   padding: 1.25rem;
+  transition: background $transition-med, border-color $transition-med, transform $transition-fast, box-shadow $transition-fast;
+}
+
+.pf-card-clickable {
+  cursor: pointer;
+}
+
+.pf-card-clickable:hover {
+  background: var(--pf-card-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.18);
+}
+
+.pf-card-glass {
+  background: var(--pf-glass);
+  border: 1px solid var(--pf-glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .pf-gradient-text {
@@ -48,8 +80,15 @@ a {
 .badge-severity-medium { background: rgba($info, 0.2); color: #7dd3fc; }
 .badge-severity-low { background: rgba($success, 0.2); color: #86efac; }
 
+body.theme-light {
+  .badge-severity-critical { color: #b91c1c; }
+  .badge-severity-high { color: #b45309; }
+  .badge-severity-medium { color: #0369a1; }
+  .badge-severity-low { color: #15803d; }
+}
+
 .skeleton {
-  background: linear-gradient(90deg, var(--pf-card) 25%, var(--pf-card-hover) 50%, var(--pf-card-hover) 75%);
+  background: linear-gradient(90deg, var(--pf-skeleton-a) 25%, var(--pf-skeleton-b) 50%, var(--pf-skeleton-a) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border-radius: $radius-md;
@@ -58,4 +97,106 @@ a {
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+.pf-fade-in {
+  animation: fade-up 0.35s ease both;
+}
+
+.form-control,
+.form-select {
+  background: var(--pf-input-bg);
+  border-color: var(--pf-border);
+  color: var(--pf-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background: var(--pf-input-bg);
+  color: var(--pf-text);
+  border-color: var(--pf-primary);
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.2);
+}
+
+.form-control::placeholder {
+  color: var(--pf-text-muted);
+}
+
+.table {
+  --bs-table-bg: var(--pf-table-bg);
+  --bs-table-color: var(--pf-text);
+  --bs-table-border-color: var(--pf-border);
+  --bs-table-hover-bg: var(--pf-card-hover);
+  --bs-table-hover-color: var(--pf-text);
+  color: var(--pf-text);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--pf-text-muted);
+  --bs-btn-border-color: var(--pf-border);
+  --bs-btn-hover-bg: var(--pf-card-hover);
+  --bs-btn-hover-border-color: var(--pf-border);
+  --bs-btn-hover-color: var(--pf-text);
+}
+
+.text-muted {
+  color: var(--pf-text-muted) !important;
+}
+
+.pf-page-title {
+  letter-spacing: -0.02em;
+}
+
+.pf-widget-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pf-widget-list li {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--pf-border);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pf-widget-list li:last-child {
+  border-bottom: none;
+}
+
+.pf-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--pf-overlay);
+  z-index: 1040;
+  animation: fade-up 0.2s ease;
+}
+
+.pf-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 100vw);
+  height: 100vh;
+  background: var(--pf-bg-elevated);
+  border-left: 1px solid var(--pf-border);
+  z-index: 1050;
+  padding: 1.5rem;
+  overflow-y: auto;
+  box-shadow: var(--pf-shadow);
+  animation: fade-up 0.25s ease;
+}
+
+@media (max-width: 991px) {
+  .pf-mobile-sidebar-open .sidebar {
+    transform: translateX(0) !important;
+  }
 }

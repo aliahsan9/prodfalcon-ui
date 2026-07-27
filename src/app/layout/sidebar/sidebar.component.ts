@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 interface NavItem {
@@ -17,16 +17,26 @@ interface NavItem {
     <aside class="sidebar">
       <div class="brand px-3 py-4">
         <span class="brand-icon"><i class="bi bi-shield-shaded"></i></span>
-        <span class="brand-text pf-gradient-text fw-bold">ProdFalcon</span>
+        <div>
+          <div class="brand-text pf-gradient-text fw-bold">ProdFalcon</div>
+          <div class="small text-muted">AI Quality Platform</div>
+        </div>
       </div>
-      <nav class="nav flex-column px-2 gap-1">
+      <nav class="nav flex-column px-2 gap-1 flex-grow-1">
         @for (item of nav; track item.route) {
-          <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            class="nav-link"
+            (click)="navigate.emit()">
             <i class="bi {{ item.icon }} me-2"></i>{{ item.label }}
             @if (item.pro) { <span class="badge bg-primary ms-auto">Pro</span> }
           </a>
         }
       </nav>
+      <div class="px-3 py-3 small text-muted border-top" style="border-color: var(--pf-border) !important;">
+        Phase 1 · Engineering Health
+      </div>
     </aside>
   `,
   styles: [`
@@ -34,12 +44,13 @@ interface NavItem {
       width: 260px; position: fixed; inset: 0 auto 0 0; z-index: 100;
       background: var(--pf-bg-elevated); border-right: 1px solid var(--pf-border);
       display: flex; flex-direction: column;
+      transition: transform 0.25s ease, background 0.28s ease;
     }
-    .brand { display: flex; align-items: center; gap: .6rem; }
-    .brand-icon { font-size: 1.5rem; color: #8b5cf6; }
+    .brand { display: flex; align-items: center; gap: .75rem; }
+    .brand-icon { font-size: 1.6rem; color: var(--pf-violet); }
     .nav-link {
       color: var(--pf-text-muted); border-radius: 12px; padding: .65rem .85rem;
-      display: flex; align-items: center;
+      display: flex; align-items: center; transition: background 0.18s ease, color 0.18s ease;
     }
     .nav-link:hover, .nav-link.active {
       background: rgba(99, 102, 241, 0.15); color: var(--pf-text);
@@ -50,6 +61,8 @@ interface NavItem {
   `]
 })
 export class SidebarComponent {
+  @Output() navigate = new EventEmitter<void>();
+
   readonly nav: NavItem[] = [
     { label: 'Dashboard', icon: 'bi-grid-1x2-fill', route: '/dashboard' },
     { label: 'Projects', icon: 'bi-folder2-open', route: '/projects' },
@@ -61,4 +74,3 @@ export class SidebarComponent {
     { label: 'Settings', icon: 'bi-gear', route: '/settings' }
   ];
 }
-

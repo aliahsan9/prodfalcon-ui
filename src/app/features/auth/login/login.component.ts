@@ -163,12 +163,20 @@ export class LoginComponent {
       },
 
       error: (error) => {
-
         console.error('Login failed:', error);
-
         this.loading.set(false);
 
-        this.toast.error?.('Invalid email or password');
+        const apiMessage = error?.error?.message as string | undefined;
+        if (error?.status === 0) {
+          this.toast.error('Cannot reach the API. Start ProdFalcon.API on port 5014.');
+          return;
+        }
+
+        this.toast.error(
+          apiMessage && apiMessage !== 'Unauthorized.'
+            ? apiMessage
+            : 'Invalid email or password.'
+        );
       }
     });
   }
