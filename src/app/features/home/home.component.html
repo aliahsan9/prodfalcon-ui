@@ -17,8 +17,8 @@
       </nav>
 
       <div class="pf-nav__actions d-none d-lg-flex">
-        <button type="button" class="btn btn--text" (click)="onViewSample()">Sign in</button>
-        <button type="button" class="btn btn--primary btn--sm" (click)="onStartScan()">Scan an archive</button>
+        <button type="button" class="btn btn--text" routerLink="/auth/login" (click)="onViewSample()">Sign in</button>
+        <button type="button" class="btn btn--primary btn--sm" routerLink="/auth/login" (click)="onStartScan()">Scan an archive</button>
       </div>
 
       <button

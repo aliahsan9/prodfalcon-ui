@@ -9,6 +9,7 @@ import {
   HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink, RouterModule } from "@angular/router";
 
 interface ReportLine {
   text: string;
@@ -18,7 +19,7 @@ interface ReportLine {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink, RouterModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
