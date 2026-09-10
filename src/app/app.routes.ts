@@ -5,10 +5,6 @@ import { authGuard } from './core/guards/auth.guard';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
 import { HomeComponent } from './features/home/home.component';
-import { AboutComponent } from './features/about/about.component';
-import { ServicesComponent } from './features/services/services.component';
-import { ContactComponent } from './features/contact/contact.component';
-import { PrivacyComponent } from './features/privacy/privacy.component';
 
 export const routes: Routes = [
 
@@ -22,28 +18,7 @@ export const routes: Routes = [
     component: HomeComponent
   },
 
-  {
-    path: 'about',
-    component: AboutComponent
-  },
-
-  {
-    path: 'services',
-    component: ServicesComponent
-  },
-
-  {
-    path: 'privacy',
-    component: PrivacyComponent
-  },
-
-  {
-    path: 'contact',
-    component: ContactComponent
-  },
-
-
-  // =========================
+    // =========================
   // AUTHENTICATION
   // =========================
 
