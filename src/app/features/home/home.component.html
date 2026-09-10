@@ -1,0 +1,267 @@
+<div class="pf" #revealRoot>
+
+  <!-- ============ NAV ============ -->
+  <header class="pf-nav" [class.pf-nav--scrolled]="isScrolled">
+    <div class="container pf-nav__inner">
+      <a class="pf-nav__brand" href="#top">
+        <svg class="pf-nav__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 24 L16 4 L26 24 L16 18 Z" />
+        </svg>
+        <span>ProdFalcon</span>
+      </a>
+
+      <nav class="pf-nav__links d-none d-lg-flex" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#report">Sample report</a>
+      </nav>
+
+      <div class="pf-nav__actions d-none d-lg-flex">
+        <button type="button" class="btn btn--text" (click)="onViewSample()">Sign in</button>
+        <button type="button" class="btn btn--primary btn--sm" (click)="onStartScan()">Scan an archive</button>
+      </div>
+
+      <button
+        type="button"
+        class="pf-nav__toggle d-lg-none"
+        (click)="toggleNav()"
+        [attr.aria-expanded]="isNavOpen"
+        aria-label="Toggle menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="pf-nav__mobile d-lg-none" [class.pf-nav__mobile--open]="isNavOpen">
+      <a href="#how" (click)="closeNav()">How it works</a>
+      <a href="#features" (click)="closeNav()">Features</a>
+      <a href="#report" (click)="closeNav()">Sample report</a>
+      <button type="button" class="btn btn--primary" (click)="onStartScan(); closeNav()">Scan an archive</button>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="pf-hero" id="top">
+    <div class="container">
+      <div class="row align-items-center pf-hero__row">
+        <div class="col-lg-6">
+          <h1 class="pf-hero__title">
+            Upload an archive.<br />
+            Walk away with the whole picture.
+          </h1>
+          <p class="pf-hero__sub">
+            ProdFalcon unpacks ZIP archives, maps every file and folder, and surfaces the
+            structure, risks, and insights hiding inside — in seconds, not hours.
+          </p>
+
+          <div class="pf-hero__actions">
+            <button type="button" class="btn btn--primary btn--lg" (click)="onStartScan()">
+              Scan your first archive
+            </button>
+            <button type="button" class="btn btn--ghost btn--lg" (click)="onViewSample()">
+              See a sample report
+            </button>
+          </div>
+
+          <div class="pf-hero__meta">
+            <span><svg viewBox="0 0 16 16"><path d="M3 8.5 6.2 12 13 4" /></svg>No file stored after scanning</span>
+            <span><svg viewBox="0 0 16 16"><path d="M3 8.5 6.2 12 13 4" /></svg>Works with any project type</span>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="pf-hero__visual-wrap">
+            <button type="button" class="pf-hero__replay" (click)="replayVisual()" aria-label="Replay animation">
+              ↻
+            </button>
+            <svg
+              [attr.data-key]="replayKey"
+              class="pf-scan-svg"
+              viewBox="0 0 480 400"
+              role="img"
+              aria-label="Diagram of an archive being scanned and unpacked into a file structure"
+            >
+              <!-- archive -->
+              <g class="pf-node-archive">
+                <rect x="20" y="150" width="116" height="88" rx="10" class="pf-box pf-box--archive" />
+                <path class="pf-zip-seam" d="M78 150 V238" />
+                <text x="78" y="200" text-anchor="middle" class="pf-label pf-label--strong">project</text>
+                <text x="78" y="216" text-anchor="middle" class="pf-label pf-label--muted">.zip</text>
+                <line class="pf-scanline" x1="20" x2="136" y1="152" y2="152" />
+              </g>
+
+              <!-- links -->
+              <path class="pf-link pf-link--1" d="M136,168 C210,168 210,64 266,64" />
+              <path class="pf-link pf-link--2" d="M136,192 C210,192 210,192 266,192" />
+              <path class="pf-link pf-link--3" d="M136,220 C210,220 210,324 266,324" />
+
+              <!-- file nodes -->
+              <g class="pf-node pf-node--1">
+                <rect x="266" y="40" width="150" height="48" rx="8" class="pf-box" />
+                <text x="286" y="68" class="pf-label">/src</text>
+                <circle cx="392" cy="64" r="3" class="pf-dot pf-dot--ok" />
+              </g>
+
+              <g class="pf-node pf-node--2">
+                <rect x="266" y="168" width="150" height="48" rx="8" class="pf-box" />
+                <text x="286" y="196" class="pf-label">package.json</text>
+                <circle cx="392" cy="192" r="3" class="pf-dot pf-dot--ok" />
+              </g>
+
+              <g class="pf-node pf-node--3">
+                <rect x="266" y="300" width="150" height="48" rx="8" class="pf-box" />
+                <text x="286" y="328" class="pf-label">scan-report.json</text>
+                <circle cx="392" cy="324" r="3" class="pf-dot pf-dot--warn" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="pf-stats">
+    <div class="container">
+      <div class="row pf-stats__row">
+        <div class="col-6 col-lg-3">
+          <span class="pf-stats__num">60+</span>
+          <span class="pf-stats__label">file &amp; framework types recognized</span>
+        </div>
+        <div class="col-6 col-lg-3">
+          <span class="pf-stats__num">&lt;5s</span>
+          <span class="pf-stats__label">typical scan time per archive</span>
+        </div>
+        <div class="col-6 col-lg-3">
+          <span class="pf-stats__num">0</span>
+          <span class="pf-stats__label">files retained after analysis</span>
+        </div>
+        <div class="col-6 col-lg-3">
+          <span class="pf-stats__num">1</span>
+          <span class="pf-stats__label">API call to plug into your pipeline</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="pf-steps" id="how" data-reveal>
+    <div class="container">
+      <h2 class="pf-section-title">From ZIP to insight, in three steps</h2>
+
+      <div class="pf-steps__row">
+        <div class="pf-step">
+          <span class="pf-step__num">01</span>
+          <h3>Upload</h3>
+          <p>Drop in a ZIP, or point ProdFalcon at a repository. Archives up to several gigabytes are accepted directly.</p>
+        </div>
+        <div class="pf-step">
+          <span class="pf-step__num">02</span>
+          <h3>Extract &amp; analyze</h3>
+          <p>The backend unpacks the archive in an isolated worker, walks the full tree, and classifies every file it finds.</p>
+        </div>
+        <div class="pf-step">
+          <span class="pf-step__num">03</span>
+          <h3>Review insights</h3>
+          <p>Get a structured report: stack detection, dependency risks, oversized files, and a browsable folder map.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES (bento) ============ -->
+  <section class="pf-features" id="features" data-reveal>
+    <div class="container">
+      <h2 class="pf-section-title">What ProdFalcon actually does with your archive</h2>
+
+      <div class="pf-bento">
+        <article class="pf-bento__item pf-bento__item--large">
+          <h3>Full structure mapping</h3>
+          <p>Every folder, file, and nesting level rebuilt into a navigable tree the moment the archive finishes extracting.</p>
+          <div class="pf-tree-mock">
+            <div class="pf-tree-mock__row"><span class="pf-tree-mock__icon">▸</span>src/</div>
+            <div class="pf-tree-mock__row pf-tree-mock__row--indent"><span class="pf-tree-mock__icon">▸</span>app/</div>
+            <div class="pf-tree-mock__row pf-tree-mock__row--indent2"><span class="pf-tree-mock__icon">•</span>home.component.ts</div>
+            <div class="pf-tree-mock__row pf-tree-mock__row--indent2"><span class="pf-tree-mock__icon">•</span>home.component.scss</div>
+            <div class="pf-tree-mock__row"><span class="pf-tree-mock__icon">▸</span>package.json</div>
+          </div>
+        </article>
+
+        <article class="pf-bento__item">
+          <h3>Dependency &amp; risk scan</h3>
+          <p>Flags outdated packages, unusually large binaries, and anything that looks like a stray credential.</p>
+        </article>
+
+        <article class="pf-bento__item">
+          <h3>Readable insight reports</h3>
+          <p>Findings are grouped by severity and explained in plain language, not raw log output.</p>
+        </article>
+
+        <article class="pf-bento__item pf-bento__item--wide">
+          <h3>API-first, built to embed</h3>
+          <p>Everything the dashboard shows is available over a JSON API, so a scan can run as one step in your existing pipeline.</p>
+          <pre class="pf-code-mock"><code>POST /api/v1/scans
+{{ '{' }} "archiveUrl": "https://.../project.zip" {{ '}' }}</code></pre>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SAMPLE REPORT ============ -->
+  <section class="pf-report" id="report" data-reveal>
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-5">
+          <h2 class="pf-section-title pf-section-title--left">See exactly what comes back</h2>
+          <p class="pf-report__copy">
+            Every scan produces a report like this one — a clear pass/fail on the things that
+            matter before code goes further down your pipeline.
+          </p>
+          <button type="button" class="btn btn--primary" (click)="onViewSample()">Open a full sample report</button>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="pf-terminal">
+            <div class="pf-terminal__bar">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="pf-terminal__body">
+              <div
+                class="pf-terminal__line"
+                *ngFor="let line of reportLines"
+                [class.pf-terminal__line--ok]="line.status === 'ok'"
+                [class.pf-terminal__line--warn]="line.status === 'warn'"
+                [class.pf-terminal__line--muted]="line.status === 'muted'"
+              >
+                <span class="pf-terminal__glyph" *ngIf="line.status === 'ok'">✓</span>
+                <span class="pf-terminal__glyph" *ngIf="line.status === 'warn'">!</span>
+                <span class="pf-terminal__glyph" *ngIf="line.status === 'muted'">&nbsp;</span>
+                {{ line.text }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="pf-cta" data-reveal>
+    <div class="container pf-cta__inner">
+      <h2>Point ProdFalcon at your next archive</h2>
+      <p>No setup beyond an API key. First scans are free while you evaluate it.</p>
+      <button type="button" class="btn btn--primary btn--lg" (click)="onStartScan()">Scan your first archive</button>
+    </div>
+  </section>
+
+  <footer class="pf-footer">
+    <div class="container pf-footer__inner">
+      <span>© 2026 ProdFalcon</span>
+      <div class="pf-footer__links">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#report">Sample report</a>
+      </div>
+    </div>
+  </footer>
+</div>
