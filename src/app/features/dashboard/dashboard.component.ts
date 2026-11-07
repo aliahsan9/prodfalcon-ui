@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { Chart, ScriptableContext, registerables } from 'chart.js';
 import { ScoreCardComponent } from '../../shared/components/score-card/score-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ScanProgressComponent } from '../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../core/services/scan.service';
 import { ProjectService } from '../../core/services/project.service';
 import { LoggerService } from '../../core/services/logger.service';
@@ -37,11 +38,12 @@ interface VulnSlice {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, ScoreCardComponent, EmptyStateComponent],
+  imports: [RouterLink, ScoreCardComponent, EmptyStateComponent, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pf-dash">
       @if (loading()) {
+        <app-scan-progress class="d-block mb-3" title="Checking your projects" stage="Loading" message="Loading scores, open issues, and recent scans." />
         <div class="skeleton hero-skel"></div>
         <div class="stat-grid">
           @for (item of skeletons; track item) { <div class="skeleton stat-skel"></div> }

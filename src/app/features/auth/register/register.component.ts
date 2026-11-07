@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 
 import {
+  ActivatedRoute,
   Router,
   RouterLink
 } from '@angular/router';
@@ -20,6 +21,7 @@ import { CommonModule } from '@angular/common';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { safeReturnUrl } from '../../../core/guards/auth.guard';
 
 @Component({
   selector: 'app-register',
@@ -144,6 +146,8 @@ export class RegisterComponent {
 
   private readonly router = inject(Router);
 
+  private readonly route = inject(ActivatedRoute);
+
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
@@ -195,7 +199,7 @@ export class RegisterComponent {
 
         this.toast.success('Account created successfully!');
 
-        this.router.navigateByUrl('/dashboard');
+        this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
       },
 
       error: (error) => {

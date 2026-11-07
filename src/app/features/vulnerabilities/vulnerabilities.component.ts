@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ScanProgressComponent } from '../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../core/services/scan.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ScanIssue } from '../../core/models/scan.model';
@@ -10,7 +11,7 @@ import { ScanIssue } from '../../core/models/scan.model';
 @Component({
   selector: 'app-vulnerabilities',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header [title]="title" [subtitle]="subtitle" />
@@ -41,7 +42,7 @@ import { ScanIssue } from '../../core/models/scan.model';
     </form>
 
     @if (loading()) {
-      <p class="text-muted">Loading findings…</p>
+      <app-scan-progress title="Checking findings" stage="Loading" message="Loading security and quality results for your projects." />
     } @else if (items().length === 0) {
       <app-empty-state title="No findings match" message="Run a scan or clear the filters." actionLabel="New scan" actionRoute="/scans/new" />
     } @else {

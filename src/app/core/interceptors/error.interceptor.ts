@@ -33,6 +33,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => err);
       }
 
+      if (err.status === 429) {
+        const retry = err.headers.get('Retry-After');
+        toast.warning(retry
+          ? `Too many requests. Try again in ${retry}s.`
+          : 'Too many requests. Please wait a moment and try again.');
+        return throwError(() => err);
+      }
+
       const message =
         err.error?.message ??
         err.error?.title ??

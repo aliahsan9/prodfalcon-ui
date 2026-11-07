@@ -6,10 +6,11 @@ import {
   ViewChild,
   Output,
   EventEmitter,
-  HostListener
+  HostListener,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterModule } from "@angular/router";
+import { Router, RouterLink, RouterModule } from "@angular/router";
 
 interface ReportLine {
   text: string;
@@ -24,6 +25,7 @@ interface ReportLine {
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
+  private readonly router = inject(Router);
   /** Emitted when the user wants to start a scan (wire to your upload flow / router). */
   @Output() startScan = new EventEmitter<void>();
   /** Emitted when the user wants to view a sample report. */
@@ -90,6 +92,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   onStartScan(): void {
     this.startScan.emit();
+    void this.router.navigate(['/scans/new']);
   }
 
   onViewSample(): void {

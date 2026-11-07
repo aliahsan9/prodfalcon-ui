@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription, interval, switchMap, takeWhile } from 'rxjs';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { ScanProgressComponent } from '../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../core/services/scan.service';
 import { ToastService } from '../../core/services/toast.service';
 import { validateGithubRepositoryUrl } from '../../core/utils/github-url';
@@ -11,7 +12,7 @@ import { validateGithubRepositoryUrl } from '../../core/utils/github-url';
 @Component({
   selector: 'app-upload',
   standalone: true,
-  imports: [PageHeaderComponent, ReactiveFormsModule],
+  imports: [PageHeaderComponent, ReactiveFormsModule, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header
@@ -30,7 +31,14 @@ import { validateGithubRepositoryUrl } from '../../core/utils/github-url';
           <input id="branch" class="form-control mb-2" formControlName="branch" placeholder="Default branch" />
           <label class="form-label" for="token">Personal access token</label>
           <input id="token" class="form-control mb-3" type="password" formControlName="accessToken" autocomplete="off" />
-          <button class="btn btn-primary" type="submit" [disabled]="busy()">Start GitHub scan</button>
+          <button class="btn btn-primary" type="submit" [disabled]="busy()">
+            @if (busy()) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              Scanning…
+            } @else {
+              Start GitHub scan
+            }
+          </button>
         </form>
       </div>
 
@@ -44,7 +52,14 @@ import { validateGithubRepositoryUrl } from '../../core/utils/github-url';
           <h2 class="h6">ZIP upload</h2>
           <p class="small text-muted">Drag a project archive here. Archives are checked for traversal and size before scanning.</p>
           <input #fileInput class="d-none" type="file" accept=".zip,application/zip" (change)="onFile($event)" />
-          <button class="btn btn-outline-primary" type="button" (click)="fileInput.click()" [disabled]="busy()">Choose ZIP</button>
+          <button class="btn btn-outline-primary" type="button" (click)="fileInput.click()" [disabled]="busy()">
+            @if (busy() && uploadPercent() !== null) {
+              <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+              Uploading…
+            } @else {
+              Choose ZIP
+            }
+          </button>
           @if (fileName()) { <p class="small mt-3 mb-0">{{ fileName() }}</p> }
           @if (uploadPercent() !== null) {
             <p class="small mt-2 mb-1">Upload {{ uploadPercent() }}%</p>
@@ -54,17 +69,19 @@ import { validateGithubRepositoryUrl } from '../../core/utils/github-url';
       </div>
     </div>
 
-    @if (stage()) {
+    @if (busy() && !finished()) {
+      <div class="mt-3">
+        <app-scan-progress
+          [title]="stage() || 'Scanning project'"
+          [stage]="stage() || 'Queued'"
+          [message]="stageMessage() || 'Waiting for the scanner to pick up this project.'"
+          [showCancel]="!!scanId()"
+          (cancel)="cancel()" />
+      </div>
+    } @else if (stage()) {
       <div class="pf-card mt-3">
-        <div class="d-flex justify-content-between gap-2 flex-wrap">
-          <div>
-            <strong>{{ stage() }}</strong>
-            <p class="small text-muted mb-0">{{ stageMessage() }}</p>
-          </div>
-          @if (scanId() && !finished()) {
-            <button class="btn btn-outline-danger btn-sm" type="button" (click)="cancel()">Cancel scan</button>
-          }
-        </div>
+        <strong>{{ stage() }}</strong>
+        <p class="small text-muted mb-0">{{ stageMessage() }}</p>
       </div>
     }
   `,

@@ -3,13 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
+import { ScanProgressComponent } from '../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../core/services/scan.service';
 import { ArchitectureEdge, ArchitectureGraph, ArchitectureNode, ProjectIntelligence, ScanHistoryItem, ThreatModel } from '../../core/models/scan.model';
 
 @Component({
   selector: 'app-architecture-explorer',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [FormsModule, PageHeaderComponent, EmptyStateComponent, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header
@@ -27,7 +28,9 @@ import { ArchitectureEdge, ArchitectureGraph, ArchitectureNode, ProjectIntellige
       </select>
     </div>
 
-    @if (error()) {
+    @if (loading()) {
+      <app-scan-progress title="Checking this project" stage="Loading" [message]="threatMode() ? 'Loading the threat model for the selected scan.' : 'Loading the architecture graph for the selected scan.'" />
+    } @else if (error()) {
       <app-empty-state title="No graph for this scan" [message]="error()!" actionLabel="New scan" actionRoute="/scans/new" />
     } @else if (graph()) {
       <div class="row g-3">
@@ -123,6 +126,7 @@ export class ArchitectureExplorerComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   readonly history = signal<ScanHistoryItem[]>([]);
+  readonly loading = signal(true);
   readonly graph = signal<ArchitectureGraph | null>(null);
   readonly profile = signal<ProjectIntelligence | null>(null);
   readonly threats = signal<ThreatModel | null>(null);
@@ -163,18 +167,28 @@ export class ArchitectureExplorerComponent implements OnInit {
         const requested = Number(this.route.snapshot.queryParamMap.get('scanId'));
         this.scanId = requested || items[0]?.scanResultId || 0;
         if (this.scanId) this.load();
-        else this.error.set('Run a scan before opening the explorer.');
+        else {
+          this.loading.set(false);
+          this.error.set('Run a scan before opening the explorer.');
+        }
       }
     });
   }
 
   load(): void {
     if (!this.scanId) return;
+    this.loading.set(true);
     this.error.set(null);
     this.selected.set(null);
     this.scans.getArchitecture(this.scanId).subscribe({
-      next: (response) => this.graph.set(response.data ?? null),
-      error: () => this.error.set('Project intelligence was not stored for this scan. Scans completed before this feature have no graph.')
+      next: (response) => {
+        this.graph.set(response.data ?? null);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Project intelligence was not stored for this scan. Scans completed before this feature have no graph.');
+      }
     });
     this.scans.getIntelligence(this.scanId).subscribe({
       next: (response) => this.profile.set(response.data ?? null),

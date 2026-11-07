@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 
 import {
+  ActivatedRoute,
   Router,
   RouterLink
 } from '@angular/router';
@@ -20,6 +21,7 @@ import { CommonModule } from '@angular/common';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { safeReturnUrl } from '../../../core/guards/auth.guard';
 
 @Component({
   selector: 'app-login',
@@ -95,7 +97,7 @@ import { ToastService } from '../../../core/services/toast.service';
         <p class="mt-3 mb-0 text-center text-muted small">
           No account?
 
-          <a routerLink="/auth/register">
+          <a routerLink="/auth/register" [queryParams]="registerParams()">
             Create one
           </a>
         </p>
@@ -121,6 +123,8 @@ export class LoginComponent {
 
   private readonly router = inject(Router);
 
+  private readonly route = inject(ActivatedRoute);
+
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
@@ -143,6 +147,11 @@ export class LoginComponent {
     ]
   });
 
+  registerParams(): Record<string, string> {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    return returnUrl ? { returnUrl } : {};
+  }
+
   submit(): void {
 
     if (this.form.invalid) {
@@ -162,7 +171,7 @@ export class LoginComponent {
 
         this.toast.success('Welcome back!');
 
-        this.router.navigateByUrl('/dashboard');
+        this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
       },
 
       error: (error) => {

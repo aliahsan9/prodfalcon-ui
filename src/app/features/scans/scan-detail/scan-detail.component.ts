@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { ScoreCardComponent } from '../../../shared/components/score-card/score-card.component';
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { ScanProgressComponent } from '../../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../../core/services/scan.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
@@ -11,14 +12,23 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
 @Component({
   selector: 'app-scan-detail',
   standalone: true,
-  imports: [RouterLink, ScoreCardComponent, SkeletonLoaderComponent, EmptyStateComponent],
+  imports: [RouterLink, ScoreCardComponent, SkeletonLoaderComponent, EmptyStateComponent, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (loading()) {
+    @if (running() || (loading() && !scan())) {
+      <app-scan-progress
+        class="d-block mb-3"
+        [title]="running() ? 'Scanning this project' : 'Checking this scan'"
+        [stage]="scan()?.stage || scan()?.status || 'Checking'"
+        [message]="scan()?.stageMessage || 'Loading the latest status. This page keeps updating while the scan is running.'"
+        [showCancel]="running()"
+        (cancel)="cancel()" />
+    }
+    @if (loading() && !scan()) {
       <app-skeleton-loader [count]="4" [columns]="4" [height]="110" />
     } @else if (!scan()) {
       <app-empty-state title="Scan not found" message="This scan is not in the current workspace." actionLabel="Scan history" actionRoute="/history" />
-    } @else {
+    } @else if (!running()) {
       <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
         <div>
           <h1 class="h4 mb-1">{{ scan()!.projectName || ('Scan #' + scan()!.scanResultId) }}</h1>
@@ -101,6 +111,10 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
 
   readonly loading = signal(true);
   readonly scan = signal<ScanResult | null>(null);
+  readonly running = computed(() => {
+    const status = this.scan()?.status;
+    return status === 'Queued' || status === 'Scanning';
+  });
   readonly severity = signal('All');
   readonly open = signal<number | null>(null);
   readonly severityFilters = ['All', 'Critical', 'High', 'Medium', 'Low', 'Info'];
@@ -139,6 +153,14 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
           issues: current.issues.map((item) => item.id === issue.id ? { ...item, ...response.data } : item)
         });
       }
+    });
+  }
+
+  cancel(): void {
+    const id = this.scan()?.scanResultId;
+    if (!id) return;
+    this.scans.cancelScan(id).subscribe({
+      next: () => this.toast.warning('Cancellation requested')
     });
   }
 
