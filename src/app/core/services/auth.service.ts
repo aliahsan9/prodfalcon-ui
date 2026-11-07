@@ -23,6 +23,18 @@ export class AuthService {
 
   readonly userEmail = computed(() => this.session()?.email ?? '');
 
+  readonly fullName = computed(() => this.session()?.fullName?.trim() ?? '');
+
+  readonly displayName = computed(() => {
+    const name = this.fullName();
+    if (name) return name;
+    const email = this.userEmail();
+    if (!email) return 'there';
+    const local = email.split('@')[0].replace(/[._-]+/g, ' ').trim();
+    if (!local) return 'there';
+    return local.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+  });
+
   readonly authState = computed(() => this.session());
 
   readonly tenantId = computed(() => this.session()?.tenantId ?? '');

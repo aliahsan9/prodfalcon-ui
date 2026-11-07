@@ -12,7 +12,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   `,
   styles: [`
     .footer {
-      border-top: 1px solid var(--pf-border);
+      border-top: 0;
+      opacity: 0.72;
+      padding-top: 0.15rem;
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
   `]

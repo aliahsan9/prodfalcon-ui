@@ -1,5 +1,6 @@
 @use 'styles/variables' as *;
 @use 'styles/theme';
+@use 'styles/dashboard';
 
 @use 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -10,15 +11,22 @@
   box-sizing: border-box;
 }
 
+:root {
+  --pf-sidebar-width: 252px;
+  --pf-sidebar-collapsed: 78px;
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--pf-bg);
   color: var(--pf-text);
   transition: background-color $transition-med, color $transition-med;
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
@@ -28,13 +36,14 @@ body.pf-sidebar-open {
 
 body.theme-dark {
   background:
-    radial-gradient(ellipse at top, #1a1f35 0%, transparent 55%),
+    radial-gradient(900px 420px at 88% -8%, rgba(37, 99, 235, 0.22), transparent 58%),
+    radial-gradient(700px 320px at 8% 0%, rgba(14, 165, 233, 0.08), transparent 50%),
     var(--pf-bg);
 }
 
 body.theme-light {
   background:
-    radial-gradient(ellipse at top, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at top, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
     var(--pf-bg);
 }
 
@@ -64,7 +73,37 @@ a:hover {
 .pf-card-clickable:hover {
   background: var(--pf-card-hover);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.16);
+}
+
+.btn {
+  font-weight: 700;
+}
+
+.btn-primary {
+  --bs-btn-bg: #2563eb;
+  --bs-btn-border-color: #2563eb;
+  --bs-btn-hover-bg: #1d4ed8;
+  --bs-btn-hover-border-color: #1d4ed8;
+  --bs-btn-active-bg: #1e40af;
+  --bs-btn-active-border-color: #1e40af;
+  --bs-btn-color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #60a5fa;
+  --bs-btn-border-color: rgba(96, 165, 250, 0.45);
+  --bs-btn-hover-bg: #2563eb;
+  --bs-btn-hover-border-color: #2563eb;
+  --bs-btn-hover-color: #fff;
+  border-radius: 999px;
+}
+
+body.theme-light .btn-outline-primary {
+  --bs-btn-color: #1d4ed8;
+  --bs-btn-border-color: rgba(37, 99, 235, 0.35);
 }
 
 .pf-card-glass {
@@ -120,6 +159,7 @@ body.theme-light {
   background: var(--pf-input-bg);
   border-color: var(--pf-border);
   color: var(--pf-text);
+  border-radius: 12px;
 }
 
 .form-control:focus,

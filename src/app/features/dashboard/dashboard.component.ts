@@ -1,25 +1,23 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnDestroy,
   OnInit,
   ViewChild,
+  effect,
   inject,
   signal
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { Chart, ScriptableContext, registerables } from 'chart.js';
 import { ScoreCardComponent } from '../../shared/components/score-card/score-card.component';
-import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
-import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { ScanService } from '../../core/services/scan.service';
 import { ProjectService } from '../../core/services/project.service';
 import { LoggerService } from '../../core/services/logger.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   DashboardSummary,
   HealthMetric,
@@ -29,255 +27,283 @@ import {
 
 Chart.register(...registerables);
 
+interface VulnSlice {
+  label: string;
+  value: number;
+  pct: number;
+  color: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [
-    RouterLink,
-    DatePipe,
-    ScoreCardComponent,
-    SkeletonLoaderComponent,
-    EmptyStateComponent,
-    PageHeaderComponent
-  ],
+  imports: [RouterLink, ScoreCardComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-page-header
-      title="Security overview"
-      [subtitle]="headerSubtitle()"
-      actionLabel="New scan"
-      actionRoute="/scans/new"
-      actionIcon="bi-shield-plus" />
+    <div class="pf-dash">
+      @if (loading()) {
+        <div class="skeleton hero-skel"></div>
+        <div class="stat-grid">
+          @for (item of skeletons; track item) { <div class="skeleton stat-skel"></div> }
+        </div>
+        <div class="mid-grid">
+          <div class="skeleton panel-skel"></div>
+          <div class="skeleton panel-skel"></div>
+        </div>
+        <div class="bottom-grid">
+          @for (item of skeletons.slice(0, 3); track item) { <div class="skeleton panel-skel"></div> }
+        </div>
+      } @else if (!summary() || summary()!.totalScans === 0) {
+        <app-empty-state
+          icon="bi-shield-check"
+          title="No scans yet"
+          message="Submit a GitHub repository or ZIP archive to generate the first evidence-based assessment."
+          actionLabel="New scan"
+          actionRoute="/scans/new" />
+      } @else {
+        @let scans = scanSeries();
+        @let scores = scoreSeries();
+        @let issues = issueSeries();
+        @let durations = scanDurations();
+        @let issueChange = seriesDelta(issues);
+        @let scoreChange = seriesDelta(scores);
+        @let durationChange = durationDeltaPct(durations);
+        @let slices = vulnSlices();
+        @let counts = statusCounts();
 
-    @if (loading()) {
-      <app-skeleton-loader [count]="4" [columns]="4" [height]="140" />
-      <div class="row g-3 mt-1">
-        <div class="col-lg-8"><div class="skeleton" style="height: 280px;"></div></div>
-        <div class="col-lg-4"><div class="skeleton" style="height: 280px;"></div></div>
-      </div>
-    } @else if (!summary() || summary()!.totalScans === 0) {
-      <app-empty-state
-        icon="bi-speedometer2"
-        title="No scans yet"
-        message="Submit a GitHub repository or ZIP archive to generate the first evidence-based assessment."
-        actionLabel="New scan"
-        actionRoute="/scans/new" />
-    } @else {
-      <!-- Overall health hero -->
-      <div class="row g-3 mb-3">
-        <div class="col-12 col-lg-4">
-          <app-score-card
-            label="Overall Health Score"
-            [score]="summary()!.averageScore"
-            icon="bi-heart-pulse"
-            variant="circular"
-            [clickable]="true"
-            metricKey="overall"
-            hint="Production readiness pulse"
-            (cardClick)="openMetric($event)" />
-        </div>
-        <div class="col-12 col-lg-8">
-          <div class="pf-card h-100 d-flex flex-column justify-content-center">
-            <div class="row text-center g-2">
-              <div class="col-6 col-md-3"><div class="text-muted small">Projects</div><div class="h5 mb-0">{{ summary()!.totalProjects }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Scans</div><div class="h5 mb-0">{{ summary()!.totalScans }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Critical</div><div class="h5 mb-0">{{ severityCount('Critical') }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">High</div><div class="h5 mb-0">{{ severityCount('High') }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Medium</div><div class="h5 mb-0">{{ severityCount('Medium') }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Low</div><div class="h5 mb-0">{{ severityCount('Low') }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Resolved</div><div class="h5 mb-0">{{ summary()!.resolvedIssues ?? 0 }}</div></div>
-              <div class="col-6 col-md-3"><div class="text-muted small">Open</div><div class="h5 mb-0">{{ summary()!.openIssues ?? summary()!.totalIssues }}</div></div>
+        <section class="hero">
+          <div>
+            <div class="welcome-pill"><i class="bi bi-stars"></i> Welcome back, {{ displayName() }}!</div>
+            <div class="hero-title">
+              <span class="hero-badge {{ healthTone() }}" aria-hidden="true"><i class="bi bi-shield-check"></i></span>
+              <h1>Your Projects are <em class="{{ healthTone() }}">{{ healthPhrase() }}</em></h1>
             </div>
-            <p class="small text-muted mb-0 mt-3">Scores are indicative assessments of detected findings, not proof a project is secure.</p>
+            <p class="hero-sub">Keep scanning, stay secure, and build with confidence.</p>
+            <p class="hero-note">Scores are indicative assessments of detected findings, not proof a project is secure.</p>
           </div>
-        </div>
-      </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="shield-glow"></div>
+            <div class="orbit orbit-a"></div>
+            <div class="orbit orbit-b"></div>
+            <svg class="shield" viewBox="0 0 200 230">
+              <defs>
+                <linearGradient id="pfShield" x1="40" y1="20" x2="170" y2="210" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#93c5fd"/>
+                  <stop offset=".45" stop-color="#3b82f6"/>
+                  <stop offset="1" stop-color="#1d4ed8"/>
+                </linearGradient>
+                <linearGradient id="pfShieldInner" x1="70" y1="70" x2="140" y2="160" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#eff6ff"/>
+                  <stop offset="1" stop-color="#60a5fa"/>
+                </linearGradient>
+              </defs>
+              <path d="M100 16 176 48v62c0 50-30 86-76 104C54 196 24 160 24 110V48Z" fill="url(#pfShield)"/>
+              <path d="M100 38 156 62v42c0 36-22 64-56 78-34-14-56-42-56-78V62Z" fill="url(#pfShieldInner)" opacity=".95"/>
+              <path d="M78 112l16 16 32-36" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="float-card card-a"><span></span><span></span><span></span></div>
+            <div class="float-card card-b"><span></span><span></span><span></span></div>
+            <div class="float-laptop"><span></span><span></span><span></span></div>
+          </div>
+        </section>
 
-      <!-- Metric grid -->
-      <div class="row g-2 g-md-3 mb-4">
-        @for (m of metrics(); track m.key) {
-          <div class="col-6 col-md-4 col-xl-3">
-            <app-score-card
-              [label]="m.label"
-              [score]="m.score"
-              [icon]="m.icon"
-              [clickable]="true"
-              [compact]="true"
-              [metricKey]="m.key"
-              (cardClick)="openMetric($event)" />
-          </div>
-        }
-      </div>
+        <section class="stat-grid">
+          <a class="stat-card stat-card--blue" routerLink="/projects">
+            <span class="stat-icon"><i class="bi bi-layers"></i></span>
+            <span class="stat-value">{{ summary()!.totalProjects }}</span>
+            <span class="stat-label">Total Projects</span>
+            <svg class="spark" viewBox="0 0 96 36" aria-hidden="true"><polyline [attr.points]="sparkPoints(scans)" /></svg>
+          </a>
+          <a class="stat-card stat-card--green" routerLink="/projects">
+            <span class="stat-icon"><i class="bi bi-shield-check"></i></span>
+            <span class="stat-value">{{ counts.secure }}</span>
+            <span class="stat-label">Secure Projects</span>
+            <svg class="spark" viewBox="0 0 96 36" aria-hidden="true"><polyline [attr.points]="sparkPoints(scores)" /></svg>
+            @if (scoreChange !== null) {
+              <span class="delta" [class.up]="scoreChange >= 0" [class.down]="scoreChange < 0">
+                @if (scoreChange > 0) { <i class="bi bi-arrow-up-short"></i> }
+                @if (scoreChange < 0) { <i class="bi bi-arrow-down-short"></i> }
+                {{ formatSigned(scoreChange) }}
+              </span>
+            }
+          </a>
+          <a class="stat-card stat-card--red" routerLink="/vulnerabilities">
+            <span class="stat-icon"><i class="bi bi-exclamation-triangle"></i></span>
+            <span class="stat-value">{{ issueTotal() }}</span>
+            <span class="stat-label">Issues Found</span>
+            <svg class="spark" viewBox="0 0 96 36" aria-hidden="true"><polyline [attr.points]="sparkPoints(issues)" /></svg>
+            @if (issueChange !== null) {
+              <span class="delta" [class.up]="issueChange <= 0" [class.down]="issueChange > 0">
+                @if (issueChange > 0) { <i class="bi bi-arrow-up-short"></i> }
+                @if (issueChange < 0) { <i class="bi bi-arrow-down-short"></i> }
+                {{ formatSigned(issueChange) }}
+              </span>
+            }
+          </a>
+          <a class="stat-card stat-card--purple" routerLink="/history">
+            <span class="stat-icon"><i class="bi bi-clock"></i></span>
+            <span class="stat-value">{{ avgScanLabel() }}</span>
+            <span class="stat-label">Avg Scan Time</span>
+            <svg class="spark" viewBox="0 0 96 36" aria-hidden="true"><polyline [attr.points]="sparkPoints(durations)" /></svg>
+            @if (durationChange !== null) {
+              <span class="delta" [class.up]="durationChange <= 0" [class.down]="durationChange > 0">
+                @if (durationChange > 0) { <i class="bi bi-arrow-up-short"></i> }
+                @if (durationChange < 0) { <i class="bi bi-arrow-down-short"></i> }
+                {{ formatSigned(durationChange) }}%
+              </span>
+            }
+          </a>
+        </section>
 
-      <!-- Charts -->
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-8">
-          <div class="pf-card">
-            <h2 class="h6 mb-3">Risk over time</h2>
-            <div class="pf-chart-wrap">
-              <canvas #trendChart height="110"></canvas>
+        <section class="mid-grid">
+          <article class="dash-card">
+            <div class="card-head">
+              <h2>Security Overview</h2>
+              <div class="card-tools">
+                <div class="legend-inline">
+                  <span><i class="swatch-blue"></i>Scans</span>
+                  <span><i class="swatch-red"></i>Issues</span>
+                </div>
+                <select class="range-select" [value]="range()" (change)="onRange($event)" aria-label="Chart range">
+                  <option value="7">Last 7 Days</option>
+                  <option value="30">Last 30 Days</option>
+                  <option value="90">Last 90 Days</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3">Issue categories</h2>
-            <div class="pf-chart-wrap">
-              <canvas #categoryChart height="200"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="pf-card">
-            <h2 class="h6 mb-3">Category scores</h2>
-            <div class="pf-chart-wrap">
-              <canvas #radarChart height="200"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="pf-card">
-            <h2 class="h6 mb-3">Security categories</h2>
-            <div class="pf-chart-wrap">
-              <canvas #severityChart height="200"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="pf-card">
-            <h2 class="h6 mb-3">Top violated rules</h2>
-            <div class="pf-chart-wrap">
-              <canvas #rulesChart height="200"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
+            @if (scans.length) {
+              <div class="pf-chart-wrap pf-chart-wrap--line">
+                <canvas #trendChart aria-label="Scans and issues over time"></canvas>
+              </div>
+            } @else {
+              <p class="quiet">Trend data appears after scans are recorded.</p>
+            }
+          </article>
 
-      <!-- Widgets -->
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-clock-history me-1"></i> Recent scans</h2>
-            <ul class="pf-widget-list">
-              @for (p of projects().slice(0, 5); track p.projectId) {
-                <li>
-                  <div class="text-truncate min-w-0">
-                    <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.displayName || p.fileName }}</a>
-                    <div class="small text-muted">{{ p.uploadedAt | date:'medium' }} · {{ p.latestStatus || p.status }} · {{ p.latestDurationMs || 0 }} ms</div>
+          <article class="dash-card">
+            <div class="card-head">
+              <h2>Top Vulnerability Types</h2>
+              <a routerLink="/vulnerabilities" class="link-all">View All →</a>
+            </div>
+            @if (slices.length) {
+              <div class="vuln-body">
+                <div class="donut-stage">
+                  <canvas #categoryChart aria-label="Vulnerability types"></canvas>
+                  <div class="donut-center">
+                    <strong>{{ vulnTotal(slices) }}</strong>
+                    <span>Total</span>
                   </div>
-                  <span class="badge text-bg-secondary flex-shrink-0">{{ p.latestScore }}</span>
-                </li>
-              } @empty {
-                <li class="text-muted small">No recent scans</li>
-              }
-            </ul>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-exclamation-triangle me-1"></i> Top risky projects</h2>
-            <ul class="pf-widget-list">
-              @for (p of riskyProjects(); track p.projectId) {
-                <li>
-                  <div class="text-truncate min-w-0">
-                    <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.fileName }}</a>
-                    <div class="small text-muted">{{ p.issueCount }} issues · {{ p.trend }}</div>
-                  </div>
-                  <span class="badge flex-shrink-0" [class]="riskBadge(p.latestScore)">{{ p.latestScore }}</span>
-                </li>
-              } @empty {
-                <li class="text-muted small">No projects</li>
-              }
-            </ul>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-robot me-1"></i> AI recommendations</h2>
-            <ul class="pf-widget-list">
-              @for (rec of summary()!.aiRecommendations; track rec) {
-                <li class="small pf-break-word">{{ rec }}</li>
-              }
-            </ul>
-            <a routerLink="/assistant" class="btn btn-outline-primary btn-sm mt-2">Open AI assistant</a>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-cloud-upload me-1"></i> Latest uploads</h2>
-            <ul class="pf-widget-list">
-              @for (p of projects().slice(0, 5); track p.projectId + '-up') {
-                <li>
-                  <span class="text-truncate min-w-0">{{ p.fileName }}</span>
-                  <span class="small text-muted flex-shrink-0">{{ p.status }}</span>
-                </li>
-              }
-            </ul>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-shield-exclamation me-1"></i> Security alerts</h2>
-            <ul class="pf-widget-list">
-              @for (item of severityEntries().slice(0, 5); track item[0]) {
-                <li>
-                  <span>{{ item[0] }}</span>
-                  <span class="badge badge-severity-{{ item[0].toLowerCase() }}">{{ item[1] }}</span>
-                </li>
-              } @empty {
-                <li class="text-muted small">No severity data</li>
-              }
-            </ul>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <div class="pf-card h-100">
-            <h2 class="h6 mb-3">Resolved findings</h2>
-            <div class="display-6 fw-bold">{{ summary()!.resolvedIssues ?? 0 }}</div>
-            <p class="small text-muted mb-0">Findings marked resolved in the vulnerability explorer.</p>
-            <a routerLink="/vulnerabilities" class="btn btn-link btn-sm px-0 mt-2">Review findings</a>
-          </div>
-        </div>
-      </div>
+                </div>
+                <ul class="vuln-legend">
+                  @for (slice of slices; track slice.label) {
+                    <li>
+                      <i [style.background]="slice.color"></i>
+                      <span>{{ slice.label }}</span>
+                      <strong>{{ slice.pct }}%</strong>
+                    </li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="quiet">No categorized findings yet.</p>
+            }
+          </article>
+        </section>
 
-      <!-- Recent projects table -->
-      <div class="pf-card">
-        <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
-          <h2 class="h6 mb-0">Recent projects</h2>
-          <a routerLink="/projects" class="small flex-shrink-0">View all</a>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Project</th>
-                <th>Score</th>
-                <th class="d-none d-md-table-cell">Security</th>
-                <th class="d-none d-sm-table-cell">Issues</th>
-                <th class="d-none d-lg-table-cell">Trend</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (p of projects().slice(0, 8); track p.projectId) {
-                <tr>
-                  <td class="text-truncate" style="max-width: 140px;">{{ p.fileName }}</td>
-                  <td>{{ p.latestScore }}/100</td>
-                  <td class="d-none d-md-table-cell">{{ p.latestSecurityScore ?? '—' }}</td>
-                  <td class="d-none d-sm-table-cell">{{ p.issueCount }}</td>
-                  <td class="d-none d-lg-table-cell"><span class="badge text-bg-secondary">{{ p.trend }}</span></td>
-                  <td>
-                    @if (p.latestScanResultId) {
-                      <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-sm btn-outline-primary">Open</a>
-                    }
-                  </td>
-                </tr>
+        <section class="bottom-grid">
+          <article class="dash-card">
+            <div class="card-head">
+              <h2>Recent Scans</h2>
+              <a routerLink="/history" class="link-all">View All →</a>
+            </div>
+            <div class="scan-list">
+              @for (project of recentProjects(); track project.projectId) {
+                <a class="scan-row" [routerLink]="project.latestScanResultId ? ['/scans', project.latestScanResultId] : ['/projects']">
+                  <span class="scan-ico"><i class="bi {{ scanIcon(project) }}"></i></span>
+                  <span class="min-w-0">
+                    <span class="scan-title">{{ scanTitle(project) }}</span>
+                    <span class="scan-sub">{{ scanWhen(project) }}</span>
+                  </span>
+                  <span class="status-pill" [class]="scanPill(project)">
+                    <i class="bi" [class.bi-check-circle-fill]="project.issueCount === 0" [class.bi-exclamation-octagon-fill]="project.issueCount > 0"></i>
+                    {{ project.issueCount === 0 ? 'No Issues' : project.issueCount + (project.issueCount === 1 ? ' Issue' : ' Issues') }}
+                  </span>
+                </a>
+              } @empty {
+                <p class="quiet">No recent scans</p>
               }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    }
+            </div>
+          </article>
+
+          <article class="dash-card status-card">
+            <h2 class="mb-3">Project Security Status</h2>
+            <div class="status-body">
+              <button type="button" class="gauge" [style.background]="gaugeBackground()" (click)="openMetric('overall')" aria-label="Open overall health details">
+                <span class="gauge-label"><strong>{{ overallScore() }}%</strong></span>
+              </button>
+              <ul class="status-legend">
+                <li><i class="dot good"></i> {{ counts.secure }} Secure</li>
+                <li><i class="dot warn"></i> {{ counts.attention }} Needs Attention</li>
+                <li><i class="dot bad"></i> {{ counts.risk }} At Risk</li>
+              </ul>
+            </div>
+            <div class="status-foot">
+              <span>Overall Security Score</span>
+              <span class="foot-delta">
+                <svg class="spark" viewBox="0 0 96 36" aria-hidden="true"><polyline [attr.points]="sparkPoints(scores)" /></svg>
+                @if (scoreChange !== null) {
+                  <strong [class.up]="scoreChange >= 0" [class.down]="scoreChange < 0">
+                    {{ scoreChange >= 0 ? '↑' : '↓' }} {{ formatSigned(scoreChange) }}%
+                  </strong>
+                }
+              </span>
+            </div>
+            <p class="quiet">{{ summary()!.resolvedIssues ?? 0 }} findings marked resolved.</p>
+          </article>
+
+          <a class="ai-card" routerLink="/assistant">
+            <div>
+              <h2>ProdFalcon AI Assistant</h2>
+              <p>{{ aiBlurb() }}</p>
+              @if (extraRecommendations() > 0) {
+                <p class="ai-more">+{{ extraRecommendations() }} more insights in chat</p>
+              }
+              <span class="ai-cta">Chat Now <i class="bi bi-arrow-right"></i></span>
+            </div>
+            <svg class="ai-bot" viewBox="0 0 120 140" aria-hidden="true">
+              <ellipse cx="60" cy="126" rx="28" ry="6" fill="rgba(255,255,255,.2)"/>
+              <rect x="34" y="36" width="52" height="46" rx="18" fill="#eff6ff"/>
+              <circle cx="50" cy="58" r="5" fill="#1d4ed8"/>
+              <circle cx="70" cy="58" r="5" fill="#1d4ed8"/>
+              <path d="M52 70h16" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+              <path d="M60 36v-10" stroke="#dbeafe" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="60" cy="22" r="4" fill="#bfdbfe"/>
+              <rect x="42" y="86" width="36" height="28" rx="12" fill="#dbeafe"/>
+              <path d="M86 96l16 8-16 6v-6h-8v-4h8z" fill="#fff"/>
+            </svg>
+          </a>
+        </section>
+
+        <section class="metrics-block">
+          <div class="card-head">
+            <h2>Category health</h2>
+            <a routerLink="/reports" class="link-all">Open analytics →</a>
+          </div>
+          <div class="metric-grid">
+            @for (metric of metrics(); track metric.key) {
+              <app-score-card
+                [label]="metric.label"
+                [score]="metric.score"
+                [icon]="metric.icon"
+                [clickable]="true"
+                [compact]="true"
+                [metricKey]="metric.key"
+                (cardClick)="openMetric($event)" />
+            }
+          </div>
+        </section>
+      }
+    </div>
 
     @if (selectedMetric(); as metric) {
       <div class="pf-drawer-backdrop" (click)="closeMetric()"></div>
@@ -305,17 +331,15 @@ Chart.register(...registerables);
     }
   `
 })
-export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('trendChart') trendChartRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('categoryChart') categoryChartRef?: ElementRef<HTMLCanvasElement>;
-  @ViewChild('radarChart') radarChartRef?: ElementRef<HTMLCanvasElement>;
-  @ViewChild('severityChart') severityChartRef?: ElementRef<HTMLCanvasElement>;
-  @ViewChild('rulesChart') rulesChartRef?: ElementRef<HTMLCanvasElement>;
 
   private readonly scanService = inject(ScanService);
   private readonly projectService = inject(ProjectService);
   private readonly logger = inject(LoggerService);
   private readonly theme = inject(ThemeService);
+  private readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
   readonly summary = signal<DashboardSummary | null>(null);
@@ -323,26 +347,41 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly trends = signal<ScanTrend[]>([]);
   readonly selectedMetric = signal<HealthMetric | null>(null);
   readonly metrics = signal<HealthMetric[]>([]);
+  readonly range = signal<'7' | '30' | '90'>('30');
+  readonly skeletons = [1, 2, 3, 4];
 
   private charts: Chart[] = [];
-  private viewReady = false;
+  private chartTimer: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
+
+  constructor() {
+    effect(() => {
+      const mode = this.theme.mode();
+      const range = this.range();
+      const summary = this.summary();
+      const trendCount = this.trends().length;
+      const loading = this.loading();
+      if (loading || !summary || summary.totalScans === 0) {
+        this.destroyCharts();
+        return;
+      }
+      this.scheduleCharts(mode, range, trendCount);
+    });
+  }
 
   ngOnInit(): void {
     this.logger.info('Dashboard loading');
     let pending = 3;
     const done = (): void => {
       pending -= 1;
-      if (pending <= 0) {
-        this.loading.set(false);
-        this.renderCharts();
-      }
+      if (pending <= 0) this.loading.set(false);
     };
 
     this.scanService.getSummary().subscribe({
-      next: (r) => {
-        if (r.success) {
-          this.summary.set(r.data);
-          this.metrics.set(this.buildMetrics(r.data));
+      next: (response) => {
+        if (response.success) {
+          this.summary.set(response.data);
+          this.metrics.set(this.buildMetrics(response.data));
         }
         done();
       },
@@ -350,73 +389,233 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.projectService.getProjects().subscribe({
-      next: (r) => {
-        if (r.success) this.projects.set(r.data);
+      next: (response) => {
+        if (response.success) this.projects.set(response.data);
         done();
       },
       error: () => done()
     });
 
     this.scanService.getTrends().subscribe({
-      next: (r) => {
-        if (r.success) this.trends.set(r.data);
+      next: (response) => {
+        if (response.success) this.trends.set(response.data);
         done();
       },
       error: () => done()
     });
   }
 
-  ngAfterViewInit(): void {
-    this.viewReady = true;
-    this.renderCharts();
-  }
-
   ngOnDestroy(): void {
+    this.destroyed = true;
+    if (this.chartTimer !== null) clearTimeout(this.chartTimer);
     this.destroyCharts();
   }
 
-  headerSubtitle(): string {
-    const s = this.summary();
-    if (!s) return 'AI-powered production readiness across your workspace';
-    return `Your projects are ${s.averageScore}% production ready on average`;
+  displayName(): string {
+    return this.auth.displayName();
   }
 
-  riskyProjects(): ProjectSummary[] {
-    return [...this.projects()].sort((a, b) => a.latestScore - b.latestScore).slice(0, 5);
+  healthTone(): 'good' | 'warn' | 'bad' {
+    const score = this.summary()?.averageScore ?? 0;
+    if (score >= 80) return 'good';
+    if (score >= 60) return 'warn';
+    return 'bad';
   }
 
-  severityEntries(): [string, number][] {
-    return Object.entries(this.summary()?.issuesBySeverity ?? {});
+  healthPhrase(): string {
+    const tone = this.healthTone();
+    if (tone === 'good') return 'Secure & Healthy';
+    if (tone === 'warn') return 'Needs Attention';
+    return 'At Risk';
   }
 
-  riskBadge(score: number): string {
-    if (score >= 80) return 'text-bg-success';
-    if (score >= 60) return 'text-bg-warning';
-    return 'text-bg-danger';
+  overallScore(): number {
+    return Math.round(this.summary()?.averageScore ?? 0);
   }
 
-  severityCount(name: string): number {
+  issueTotal(): number {
     const summary = this.summary();
     if (!summary) return 0;
-    const explicit: Record<string, number | undefined> = {
-      Critical: summary.criticalVulnerabilities,
-      High: summary.highVulnerabilities,
-      Medium: summary.mediumVulnerabilities,
-      Low: summary.lowVulnerabilities
-    };
-    return explicit[name] ?? summary.issuesBySeverity?.[name] ?? 0;
+    return summary.openIssues ?? summary.totalIssues ?? 0;
+  }
+
+  onRange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.range.set(value === '7' || value === '90' ? value : '30');
+  }
+
+  filteredTrends(): ScanTrend[] {
+    const all = this.trends();
+    if (!all.length) return [];
+    const cutoff = Date.now() - Number(this.range()) * 86400000;
+    const filtered = all.filter((row) => {
+      const time = new Date(row.date).getTime();
+      return Number.isFinite(time) && time >= cutoff;
+    });
+    return filtered.length ? filtered : all;
+  }
+
+  scanSeries(): number[] {
+    return this.filteredTrends().map((row) => row.scanCount);
+  }
+
+  scoreSeries(): number[] {
+    return this.filteredTrends().map((row) => row.averageScore);
+  }
+
+  issueSeries(): number[] {
+    return this.filteredTrends().map((row) => row.issueCount);
+  }
+
+  scanDurations(): number[] {
+    return [...this.projects()]
+      .filter((project) => (project.latestDurationMs ?? 0) > 0)
+      .sort((a, b) => new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime())
+      .map((project) => project.latestDurationMs ?? 0);
+  }
+
+  seriesDelta(values: number[]): number | null {
+    if (values.length < 2) return null;
+    return Math.round((values[values.length - 1] - values[values.length - 2]) * 10) / 10;
+  }
+
+  durationDeltaPct(values: number[]): number | null {
+    if (values.length < 2 || !values[values.length - 2]) return null;
+    const previous = values[values.length - 2];
+    return Math.round(((values[values.length - 1] - previous) / previous) * 100);
+  }
+
+  formatSigned(value: number): string {
+    const rounded = Math.abs(value) >= 10 || Number.isInteger(value)
+      ? Math.round(value)
+      : Math.round(value * 10) / 10;
+    return `${rounded > 0 ? '+' : ''}${rounded}`;
+  }
+
+  avgScanLabel(): string {
+    const samples = this.scanDurations();
+    if (!samples.length) return '—';
+    const ms = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+    const minutes = ms / 60000;
+    if (minutes >= 1) {
+      const shown = minutes >= 10 ? Math.round(minutes).toString() : (Math.round(minutes * 10) / 10).toString();
+      return `${shown} min`;
+    }
+    return `${Math.max(1, Math.round(ms / 1000))} sec`;
+  }
+
+  sparkPoints(values: number[]): string {
+    const series = values.length ? values : [0, 0];
+    const min = Math.min(...series);
+    const max = Math.max(...series);
+    const span = max - min || 1;
+    return series.map((value, index) => {
+      const x = series.length === 1 ? 48 : (index / (series.length - 1)) * 96;
+      const y = 4 + (1 - (value - min) / span) * 28;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  vulnSlices(): VulnSlice[] {
+    const summary = this.summary();
+    if (!summary) return [];
+    const source = Object.keys(summary.issuesByCategory ?? {}).length
+      ? summary.issuesByCategory
+      : summary.issuesBySeverity ?? {};
+    const entries = Object.entries(source).filter(([, count]) => count > 0).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) return [];
+    const top = entries.slice(0, 3);
+    const rest = entries.slice(3).reduce((sum, entry) => sum + entry[1], 0);
+    const rows: [string, number][] = rest > 0 ? [...top, ['Others', rest]] : top;
+    const total = rows.reduce((sum, entry) => sum + entry[1], 0) || 1;
+    const colors = ['#ff4d6d', '#f5a524', '#a855f7', '#3b82f6'];
+    let used = 0;
+    return rows.map(([label, value], index) => {
+      const pct = index === rows.length - 1 ? Math.max(0, 100 - used) : Math.round((value / total) * 100);
+      used += pct;
+      return { label, value, pct, color: colors[index] ?? '#3b82f6' };
+    });
+  }
+
+  vulnTotal(slices: VulnSlice[]): number {
+    return slices.reduce((sum, slice) => sum + slice.value, 0);
+  }
+
+  statusCounts(): { secure: number; attention: number; risk: number } {
+    const counts = { secure: 0, attention: 0, risk: 0 };
+    for (const project of this.projects()) {
+      const health = this.projectService.getHealth(project.latestScore, project.issueCount);
+      if (health === 'Healthy') counts.secure += 1;
+      else if (health === 'Warning') counts.attention += 1;
+      else counts.risk += 1;
+    }
+    return counts;
+  }
+
+  gaugeBackground(): string {
+    const { secure, attention, risk } = this.statusCounts();
+    const total = secure + attention + risk;
+    if (!total) return 'conic-gradient(rgba(148, 163, 184, 0.28) 0% 100%)';
+    const safe = (secure / total) * 100;
+    const warnEnd = safe + (attention / total) * 100;
+    return `conic-gradient(#34d399 0% ${safe}%, #fbbf24 ${safe}% ${warnEnd}%, #fb7185 ${warnEnd}% 100%)`;
+  }
+
+  recentProjects(): ProjectSummary[] {
+    return [...this.projects()]
+      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+      .slice(0, 3);
+  }
+
+  scanTitle(project: ProjectSummary): string {
+    if (project.repositoryUrl) return project.repositoryUrl.replace(/^https?:\/\//, '').replace(/\.git$/, '');
+    return project.displayName || project.fileName;
+  }
+
+  scanIcon(project: ProjectSummary): string {
+    const url = project.repositoryUrl ?? '';
+    if (url.includes('github.com')) return 'bi-github';
+    if (url) return 'bi-globe2';
+    return 'bi-file-earmark-zip';
+  }
+
+  scanWhen(project: ProjectSummary): string {
+    const state = project.latestStatus || project.status;
+    const when = this.relativeTime(project.uploadedAt);
+    if (state && !['Completed', 'Succeeded', 'Complete'].includes(state)) return `${state} · ${when}`;
+    return `Completed · ${when}`;
+  }
+
+  scanPill(project: ProjectSummary): string {
+    const state = (project.latestStatus || project.status || '').toLowerCase();
+    if (state === 'failed') return 'status-pill bad';
+    if (project.issueCount === 0) return 'status-pill ok';
+    if (project.issueCount < 5) return 'status-pill warn';
+    return 'status-pill bad';
+  }
+
+  aiBlurb(): string {
+    const recommendation = this.summary()?.aiRecommendations?.find((item) => !!item?.trim());
+    return recommendation || 'Ask anything about security, get instant insights!';
+  }
+
+  extraRecommendations(): number {
+    const count = this.summary()?.aiRecommendations?.filter((item) => !!item?.trim()).length ?? 0;
+    return Math.max(0, count - 1);
   }
 
   openMetric(key: string): void {
-    const metric = this.metrics().find((m) => m.key === key)
-      ?? this.metrics().find((m) => m.label === key)
-      ?? {
-        key: 'overall',
-        label: 'Overall Health',
-        icon: 'bi-heart-pulse',
-        score: this.summary()?.averageScore ?? 0,
-        description: 'Composite production readiness across security, maintainability, performance, and architecture.'
-      };
+    const metric = this.metrics().find((item) => item.key === key)
+      ?? (key === 'overall'
+        ? {
+            key: 'overall',
+            label: 'Overall Health',
+            icon: 'bi-heart-pulse',
+            score: this.summary()?.averageScore ?? 0,
+            description: 'Composite production readiness across security, maintainability, performance, and architecture.'
+          }
+        : null);
+    if (!metric) return;
     this.selectedMetric.set(metric);
     this.logger.info('Opened metric detail', { key: metric.key });
   }
@@ -425,172 +624,165 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedMetric.set(null);
   }
 
-  private buildMetrics(s: DashboardSummary): HealthMetric[] {
+  private relativeTime(value: string): string {
+    const then = new Date(value).getTime();
+    if (!Number.isFinite(then)) return 'recently';
+    const minutes = Math.round((Date.now() - then) / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.round(hours / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
+
+  private buildMetrics(summary: DashboardSummary): HealthMetric[] {
     return [
-      { key: 'security', label: 'Security score', icon: 'bi-shield-lock', score: s.averageSecurityScore, description: 'Average of security scores calculated from open findings.' },
-      { key: 'maintainability', label: 'Maintainability', icon: 'bi-tools', score: s.averageMaintainabilityScore, description: 'Score from quality and maintainability findings.' },
-      { key: 'performance', label: 'Performance', icon: 'bi-lightning-charge', score: s.averagePerformanceScore, description: 'Score from performance findings.' },
-      { key: 'production', label: 'Configuration', icon: 'bi-sliders', score: s.averageProductionReadinessScore, description: 'Score from configuration and production-hardening findings.' },
-      { key: 'architecture', label: 'Architecture', icon: 'bi-diagram-3', score: s.architectureScore, description: 'Starts at 100. Only open Architecture findings reduce it. A score of 100 means none were stored, not that the design was approved.' },
-      { key: 'complexity', label: 'Complexity', icon: 'bi-share', score: s.complexityScore, description: 'Starts at 100 and falls only when a high-complexity finding is open. Documentation and test coverage are not measured.' }
+      { key: 'security', label: 'Security score', icon: 'bi-shield-lock', score: summary.averageSecurityScore, description: 'Average of security scores calculated from open findings.' },
+      { key: 'maintainability', label: 'Maintainability', icon: 'bi-tools', score: summary.averageMaintainabilityScore, description: 'Score from quality and maintainability findings.' },
+      { key: 'performance', label: 'Performance', icon: 'bi-lightning-charge', score: summary.averagePerformanceScore, description: 'Score from performance findings.' },
+      { key: 'production', label: 'Configuration', icon: 'bi-sliders', score: summary.averageProductionReadinessScore, description: 'Score from configuration and production-hardening findings.' },
+      { key: 'architecture', label: 'Architecture', icon: 'bi-diagram-3', score: summary.architectureScore, description: 'Starts at 100. Only open Architecture findings reduce it. A score of 100 means none were stored, not that the design was approved.' },
+      { key: 'complexity', label: 'Complexity', icon: 'bi-share', score: summary.complexityScore, description: 'Starts at 100 and falls only when a high-complexity finding is open. Documentation and test coverage are not measured.' }
     ];
   }
 
-  private renderCharts(): void {
-    if (this.loading() || !this.viewReady || !this.summary()) return;
+  private scheduleCharts(mode: string, range: string, trendCount: number): void {
+    if (this.destroyed || !mode || !range || trendCount < 0) return;
+    if (this.chartTimer !== null) clearTimeout(this.chartTimer);
+    this.chartTimer = setTimeout(() => {
+      this.chartTimer = null;
+      this.renderCharts();
+    }, 0);
+  }
+
+  private renderCharts(attempt = 0): void {
+    if (this.destroyed) return;
+    const summary = this.summary();
+    if (this.loading() || !summary || summary.totalScans === 0) return;
+    const trends = this.filteredTrends();
+    const slices = this.vulnSlices();
+    const waiting = (trends.length > 0 && !this.trendChartRef?.nativeElement)
+      || (slices.length > 0 && !this.categoryChartRef?.nativeElement);
+    if (waiting && attempt < 8) {
+      setTimeout(() => this.renderCharts(attempt + 1), 40);
+      return;
+    }
+
     this.destroyCharts();
+    const muted = this.cssVar('--pf-text-muted', '#93a4c3');
+    const grid = this.cssVar('--pf-chart-grid', 'rgba(148,163,184,0.12)');
+    const card = this.cssVar('--pf-card', '#101a33');
 
-    const textColor = getComputedStyle(document.body).getPropertyValue('--pf-text').trim() || '#f1f5f9';
-    const gridColor = getComputedStyle(document.body).getPropertyValue('--pf-chart-grid').trim() || 'rgba(148,163,184,0.12)';
-    const muted = getComputedStyle(document.body).getPropertyValue('--pf-text-muted').trim() || '#94a3b8';
-
-    if (this.trendChartRef?.nativeElement && this.trends().length) {
+    if (this.trendChartRef?.nativeElement && trends.length) {
       this.charts.push(new Chart(this.trendChartRef.nativeElement, {
         type: 'line',
         data: {
-          labels: this.trends().map((t) => new Date(t.date).toLocaleDateString()),
+          labels: trends.map((row) => this.shortDate(row.date)),
           datasets: [
             {
-              label: 'Avg score',
-              data: this.trends().map((t) => t.averageScore),
-              borderColor: '#8b5cf6',
-              backgroundColor: 'rgba(139, 92, 246, 0.15)',
-              tension: 0.35,
-              fill: true
+              label: 'Scans',
+              data: trends.map((row) => row.scanCount),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.16)',
+              tension: 0.42,
+              fill: true,
+              borderWidth: 2.5,
+              pointRadius: (context: ScriptableContext<'line'>) => context.dataIndex === context.dataset.data.length - 1 ? 4 : 0,
+              pointHoverRadius: 5,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2
             },
             {
               label: 'Issues',
-              data: this.trends().map((t) => t.issueCount),
-              borderColor: '#06b6d4',
+              data: trends.map((row) => row.issueCount),
+              borderColor: '#fb7185',
               backgroundColor: 'transparent',
-              tension: 0.35,
-              yAxisID: 'y1'
+              tension: 0.42,
+              fill: false,
+              borderWidth: 2.5,
+              pointRadius: (context: ScriptableContext<'line'>) => context.dataIndex === context.dataset.data.length - 1 ? 4 : 0,
+              pointHoverRadius: 5,
+              pointBackgroundColor: '#fb7185',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2
             }
           ]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
-          plugins: { legend: { labels: { color: muted, boxWidth: 12 } } },
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          layout: { padding: { top: 18, right: 8 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: '#0b1224', borderColor: 'rgba(148,163,184,0.2)', borderWidth: 1 }
+          },
           scales: {
-            x: { ticks: { color: muted, maxRotation: 45, autoSkip: true, maxTicksLimit: 6 }, grid: { color: gridColor } },
-            y: { min: 0, max: 100, ticks: { color: muted }, grid: { color: gridColor } },
-            y1: { position: 'right', ticks: { color: muted, maxTicksLimit: 5 }, grid: { drawOnChartArea: false } }
+            x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false }, border: { display: false } },
+            y: { beginAtZero: true, ticks: { color: muted, precision: 0, maxTicksLimit: 5 }, grid: { color: grid }, border: { display: false } }
           }
-        }
-      }));
-    }
-
-    const categoryEntries = Object.entries(this.summary()!.issuesByCategory ?? {});
-    if (this.categoryChartRef?.nativeElement && categoryEntries.length) {
-      this.charts.push(new Chart(this.categoryChartRef.nativeElement, this.barConfig(
-        categoryEntries.map((e) => e[0]),
-        categoryEntries.map((e) => e[1]),
-        '#6366f1',
-        textColor,
-        muted,
-        gridColor
-      )));
-    }
-
-    if (this.radarChartRef?.nativeElement) {
-      const s = this.summary()!;
-      this.charts.push(new Chart(this.radarChartRef.nativeElement, {
-        type: 'radar',
-        data: {
-          labels: ['Security', 'Maintainability', 'Performance', 'Configuration'],
-          datasets: [{
-            label: 'Scores',
-            data: [
-              s.averageSecurityScore,
-              s.averageMaintainabilityScore,
-              s.averagePerformanceScore,
-              s.averageProductionReadinessScore
-            ],
-            backgroundColor: 'rgba(99, 102, 241, 0.25)',
-            borderColor: '#8b5cf6',
-            pointBackgroundColor: '#06b6d4'
-          }]
         },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            r: {
-              min: 0,
-              max: 100,
-              ticks: { display: false },
-              grid: { color: gridColor },
-              pointLabels: { color: muted }
-            }
+        plugins: [{
+          id: 'pfEndLabels',
+          afterDatasetsDraw(chart: Chart): void {
+            const { ctx } = chart;
+            chart.data.datasets.forEach((dataset, index) => {
+              const point = chart.getDatasetMeta(index).data.at(-1);
+              const raw = dataset.data.at(-1);
+              if (!point || typeof raw !== 'number') return;
+              ctx.save();
+              ctx.font = '700 11px "Plus Jakarta Sans", Inter, sans-serif';
+              ctx.fillStyle = String(dataset.borderColor ?? '#93c5fd');
+              ctx.textAlign = 'right';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(`${raw} ${dataset.label ?? ''}`.trim(), point.x - 8, point.y - 6);
+              ctx.restore();
+            });
           }
-        }
+        }]
       }));
     }
 
-    const severityEntries = Object.entries(this.summary()!.issuesBySeverity ?? {});
-    if (this.severityChartRef?.nativeElement && severityEntries.length) {
-      this.charts.push(new Chart(this.severityChartRef.nativeElement, {
+    if (this.categoryChartRef?.nativeElement && slices.length) {
+      this.charts.push(new Chart(this.categoryChartRef.nativeElement, {
         type: 'doughnut',
         data: {
-          labels: severityEntries.map((e) => e[0]),
+          labels: slices.map((slice) => slice.label),
           datasets: [{
-            data: severityEntries.map((e) => e[1]),
-            backgroundColor: ['#ef4444', '#f59e0b', '#38bdf8', '#22c55e', '#8b5cf6']
+            data: slices.map((slice) => slice.value),
+            backgroundColor: slices.map((slice) => slice.color),
+            borderColor: card,
+            borderWidth: 3,
+            hoverOffset: 6
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom', labels: { color: muted } } }
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: { legend: { display: false } }
         }
       }));
-    }
-
-    const ruleEntries = Object.entries(this.summary()!.topViolatedRules ?? {}).slice(0, 6);
-    if (this.rulesChartRef?.nativeElement && ruleEntries.length) {
-      this.charts.push(new Chart(this.rulesChartRef.nativeElement, this.barConfig(
-        ruleEntries.map((e) => e[0].length > 18 ? e[0].slice(0, 18) + '…' : e[0]),
-        ruleEntries.map((e) => e[1]),
-        '#06b6d4',
-        textColor,
-        muted,
-        gridColor,
-        true
-      )));
     }
 
     this.logger.debug('Dashboard charts rendered', { count: this.charts.length, theme: this.theme.mode() });
   }
 
-  private barConfig(
-    labels: string[],
-    data: number[],
-    color: string,
-    _text: string,
-    muted: string,
-    grid: string,
-    horizontal = false
-  ): ChartConfiguration {
-    return {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: color, borderRadius: 8, barThickness: 18 }]
-      },
-      options: {
-        indexAxis: horizontal ? 'y' : 'x',
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: muted }, grid: { color: grid } },
-          y: { ticks: { color: muted }, grid: { color: grid } }
-        }
-      }
-    };
+  private shortDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  private cssVar(name: string, fallback: string): string {
+    const value = getComputedStyle(document.body).getPropertyValue(name).trim();
+    return value || fallback;
   }
 
   private destroyCharts(): void {
-    this.charts.forEach((c) => c.destroy());
+    this.charts.forEach((chart) => chart.destroy());
     this.charts = [];
   }
 }

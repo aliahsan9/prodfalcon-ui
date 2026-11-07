@@ -17,14 +17,22 @@ body.theme-dark {
   --pf-danger: #{$danger};
   --pf-info: #{$info};
   --pf-shadow: #{$shadow-soft};
-  --pf-glass: rgba(17, 24, 39, 0.72);
+  --pf-glass: rgba(10, 18, 40, 0.78);
   --pf-glass-border: rgba(148, 163, 184, 0.12);
-  --pf-input-bg: #0f1623;
+  --pf-input-bg: #0c1528;
   --pf-table-bg: transparent;
   --pf-chart-grid: rgba(148, 163, 184, 0.12);
-  --pf-skeleton-a: #{$card-bg};
-  --pf-skeleton-b: #{$card-bg-hover};
-  --pf-overlay: rgba(2, 6, 23, 0.65);
+  --pf-skeleton-a: #101a33;
+  --pf-skeleton-b: #1a2948;
+  --pf-overlay: rgba(2, 6, 23, 0.62);
+  --pf-sidebar: #070e1c;
+  --pf-sidebar-text: #e8eefc;
+  --pf-sidebar-muted: #93a4c3;
+  --pf-sidebar-border: rgba(148, 163, 184, 0.1);
+  --pf-nav-hover: rgba(59, 130, 246, 0.14);
+  --pf-search-bg: rgba(12, 24, 48, 0.9);
+  --pf-beta: #bfdbfe;
+  --pf-beta-bg: rgba(59, 130, 246, 0.18);
   color-scheme: dark;
 }
 
@@ -45,13 +53,21 @@ body.theme-light {
   --pf-danger: #{$danger};
   --pf-info: #{$info};
   --pf-shadow: #{$shadow-glass};
-  --pf-glass: rgba(255, 255, 255, 0.82);
+  --pf-glass: rgba(255, 255, 255, 0.86);
   --pf-glass-border: rgba(15, 23, 42, 0.08);
   --pf-input-bg: #ffffff;
   --pf-table-bg: transparent;
   --pf-chart-grid: rgba(15, 23, 42, 0.08);
   --pf-skeleton-a: #e2e8f0;
-  --pf-skeleton-b: #f1f5f9;
+  --pf-skeleton-b: #f8fafc;
   --pf-overlay: rgba(15, 23, 42, 0.4);
+  --pf-sidebar: #f8fafc;
+  --pf-sidebar-text: #0f172a;
+  --pf-sidebar-muted: #64748b;
+  --pf-sidebar-border: rgba(15, 23, 42, 0.08);
+  --pf-nav-hover: rgba(37, 99, 235, 0.08);
+  --pf-search-bg: #eef3fb;
+  --pf-beta: #1d4ed8;
+  --pf-beta-bg: rgba(37, 99, 235, 0.1);
   color-scheme: light;
 }

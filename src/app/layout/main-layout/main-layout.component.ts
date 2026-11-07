@@ -18,7 +18,7 @@ import { ShellService } from '../../core/services/shell.service';
       <app-sidebar (navigate)="sidebarOpen.set(false)" />
       <div class="app-main flex-grow-1 d-flex flex-column min-vh-100">
         <app-navbar (menuToggle)="toggleSidebar()" />
-        <main class="app-content flex-grow-1 p-2 p-sm-3 p-lg-4">
+        <main class="app-content flex-grow-1">
           <router-outlet />
         </main>
         <app-footer />
@@ -33,15 +33,16 @@ import { ShellService } from '../../core/services/shell.service';
       overflow-x: clip;
     }
     .app-main {
-      margin-left: 248px;
+      margin-left: var(--pf-sidebar-width);
       transition: margin-left 0.2s ease;
       min-width: 0;
       width: 100%;
     }
-    .collapsed .app-main { margin-left: 76px; }
+    .collapsed .app-main { margin-left: var(--pf-sidebar-collapsed); }
     .app-content {
       min-width: 0;
       max-width: 100%;
+      padding: 0.25rem 1.15rem 1.25rem;
     }
     .sidebar-backdrop {
       position: fixed;
@@ -52,6 +53,9 @@ import { ShellService } from '../../core/services/shell.service';
     }
     @media (max-width: 991px) {
       .app-main, .collapsed .app-main { margin-left: 0; }
+    }
+    @media (max-width: 575px) {
+      .app-content { padding: 0.15rem 0.75rem 1rem; }
     }
   `]
 })
