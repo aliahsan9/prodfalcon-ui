@@ -1,0 +1,55 @@
+<header class="pub-nav" [class.pub-nav--scrolled]="scrolled()" [class.pub-nav--open]="menuOpen()">
+  <div class="pub-nav__bar">
+    <a class="pub-nav__brand" routerLink="/" (click)="closeMenu()" aria-label="ProdFalcon home">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 24 L16 4 L26 24 L16 18 Z" />
+      </svg>
+      <span>ProdFalcon</span>
+    </a>
+
+    <nav class="pub-nav__links" aria-label="Primary">
+      <a routerLink="/" fragment="how">How it works</a>
+      <a routerLink="/" fragment="features">Features</a>
+      <a routerLink="/" fragment="report">Sample report</a>
+    </nav>
+
+    <div class="pub-nav__actions">
+      <a
+        class="pub-nav__text"
+        routerLink="/auth/login"
+        routerLinkActive="is-current"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >Sign in</a>
+      <a
+        class="pub-nav__ghost"
+        routerLink="/auth/register"
+        routerLinkActive="is-current"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >Create account</a>
+      <a class="pub-nav__solid" routerLink="/scans/new">Start a scan</a>
+    </div>
+
+    <button
+      type="button"
+      class="pub-nav__toggle"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  @if (menuOpen()) {
+    <nav class="pub-nav__mobile" aria-label="Mobile">
+      <a routerLink="/" fragment="how" (click)="closeMenu()">How it works</a>
+      <a routerLink="/" fragment="features" (click)="closeMenu()">Features</a>
+      <a routerLink="/" fragment="report" (click)="closeMenu()">Sample report</a>
+      <a routerLink="/auth/login" (click)="closeMenu()">Sign in</a>
+      <a routerLink="/auth/register" (click)="closeMenu()">Create account</a>
+      <a class="pub-nav__solid" routerLink="/scans/new" (click)="closeMenu()">Start a scan</a>
+    </nav>
+  }
+</header>

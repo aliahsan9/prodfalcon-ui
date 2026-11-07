@@ -1,44 +1,6 @@
 <div class="pf" #revealRoot>
 
-  <!-- ============ NAV ============ -->
-  <header class="pf-nav" [class.pf-nav--scrolled]="isScrolled">
-    <div class="container pf-nav__inner">
-      <a class="pf-nav__brand" href="#top">
-        <svg class="pf-nav__mark" viewBox="0 0 32 32" aria-hidden="true">
-          <path d="M6 24 L16 4 L26 24 L16 18 Z" />
-        </svg>
-        <span>ProdFalcon</span>
-      </a>
-
-      <nav class="pf-nav__links d-none d-lg-flex" aria-label="Primary">
-        <a href="#how">How it works</a>
-        <a href="#features">Features</a>
-        <a href="#report">Sample report</a>
-      </nav>
-
-      <div class="pf-nav__actions d-none d-lg-flex">
-        <button type="button" class="btn btn--text" routerLink="/auth/login" (click)="onViewSample()">Sign in</button>
-        <button type="button" class="btn btn--primary btn--sm" routerLink="/auth/login" (click)="onStartScan()">Scan an archive</button>
-      </div>
-
-      <button
-        type="button"
-        class="pf-nav__toggle d-lg-none"
-        (click)="toggleNav()"
-        [attr.aria-expanded]="isNavOpen"
-        aria-label="Toggle menu"
-      >
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-
-    <div class="pf-nav__mobile d-lg-none" [class.pf-nav__mobile--open]="isNavOpen">
-      <a href="#how" (click)="closeNav()">How it works</a>
-      <a href="#features" (click)="closeNav()">Features</a>
-      <a href="#report" (click)="closeNav()">Sample report</a>
-      <button type="button" class="btn btn--primary" (click)="onStartScan(); closeNav()">Scan an archive</button>
-    </div>
-  </header>
+  <app-public-navbar />
 
   <!-- ============ HERO ============ -->
   <section class="pf-hero" id="top">
@@ -254,14 +216,5 @@
     </div>
   </section>
 
-  <footer class="pf-footer">
-    <div class="container pf-footer__inner">
-      <span>© 2026 ProdFalcon</span>
-      <div class="pf-footer__links">
-        <a href="#how">How it works</a>
-        <a href="#features">Features</a>
-        <a href="#report">Sample report</a>
-      </div>
-    </div>
-  </footer>
+  <app-public-footer />
 </div>

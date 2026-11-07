@@ -24,6 +24,9 @@ export const routes: Routes = [
 
   {
     path: 'auth',
+    loadComponent: () =>
+      import('./features/auth/auth-shell/auth-shell.component')
+        .then(m => m.AuthShellComponent),
     children: [
 
       {

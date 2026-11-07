@@ -6,11 +6,12 @@ import {
   ViewChild,
   Output,
   EventEmitter,
-  HostListener,
   inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterModule } from "@angular/router";
+import { Router } from '@angular/router';
+import { PublicFooterComponent } from '../../layout/public-footer/public-footer.component';
+import { PublicNavbarComponent } from '../../layout/public-navbar/public-navbar.component';
 
 interface ReportLine {
   text: string;
@@ -20,7 +21,7 @@ interface ReportLine {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterModule],
+  imports: [CommonModule, PublicNavbarComponent, PublicFooterComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
@@ -33,8 +34,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('revealRoot') revealRoot?: ElementRef<HTMLElement>;
 
-  isNavOpen = false;
-  isScrolled = false;
   replayKey = 0; // bump to restart the hero SVG animation
 
   readonly reportLines: ReportLine[] = [
@@ -71,19 +70,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.observer?.disconnect();
-  }
-
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.isScrolled = window.scrollY > 12;
-  }
-
-  toggleNav(): void {
-    this.isNavOpen = !this.isNavOpen;
-  }
-
-  closeNav(): void {
-    this.isNavOpen = false;
   }
 
   replayVisual(): void {

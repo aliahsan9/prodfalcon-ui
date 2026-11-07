@@ -43,6 +43,13 @@
   }
 }
 
+#how,
+#features,
+#report,
+#top {
+  scroll-margin-top: 88px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -118,113 +125,6 @@
   }
 }
 
-// --------------------------------------------------------------------------
-// Nav
-// --------------------------------------------------------------------------
-.pf-nav {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  background: rgba(16, 20, 28, 0.7);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease, background 0.2s ease;
-
-  &--scrolled {
-    border-bottom-color: var(--pf-border);
-    background: rgba(16, 20, 28, 0.92);
-  }
-
-  &__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 68px;
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-family: var(--pf-font-display);
-    font-weight: 600;
-    font-size: 1.15rem;
-    color: var(--pf-text);
-    text-decoration: none;
-  }
-
-  &__mark {
-    width: 22px;
-    height: 22px;
-    fill: var(--pf-amber);
-  }
-
-  &__links {
-    gap: 2rem;
-
-    a {
-      color: var(--pf-text-muted);
-      text-decoration: none;
-      font-size: 0.94rem;
-      transition: color 0.15s ease;
-
-      &:hover {
-        color: var(--pf-text);
-      }
-    }
-  }
-
-  &__actions {
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__toggle {
-    width: 36px;
-    height: 32px;
-    background: none;
-    border: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    cursor: pointer;
-
-    span {
-      height: 2px;
-      background: var(--pf-text);
-      border-radius: 2px;
-    }
-  }
-
-  &__mobile {
-    max-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0 1rem;
-    background: var(--pf-bg-alt);
-    border-bottom: 1px solid var(--pf-border);
-    transition: max-height 0.25s ease, padding 0.25s ease;
-
-    a {
-      color: var(--pf-text-muted);
-      text-decoration: none;
-      padding: 0.75rem 0.25rem;
-      border-bottom: 1px solid var(--pf-border);
-    }
-
-    .btn {
-      margin: 0.85rem 0;
-    }
-
-    &--open {
-      max-height: 320px;
-      padding: 0.5rem 1rem 1rem;
-    }
-  }
-}
 
 // --------------------------------------------------------------------------
 // Hero
@@ -719,37 +619,6 @@
   }
 }
 
-// --------------------------------------------------------------------------
-// Footer
-// --------------------------------------------------------------------------
-.pf-footer {
-  border-top: 1px solid var(--pf-border);
-  padding: 1.75rem 0;
-
-  &__inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--pf-text-faint);
-    font-size: 0.85rem;
-  }
-
-  &__links {
-    display: flex;
-    gap: 1.25rem;
-
-    a {
-      color: var(--pf-text-faint);
-      text-decoration: none;
-
-      &:hover {
-        color: var(--pf-text-muted);
-      }
-    }
-  }
-}
 
 // --------------------------------------------------------------------------
 // Responsive

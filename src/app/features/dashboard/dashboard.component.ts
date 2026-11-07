@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Chart, ScriptableContext, registerables } from 'chart.js';
+import { timeout } from 'rxjs';
 import { ScoreCardComponent } from '../../shared/components/score-card/score-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ScanProgressComponent } from '../../shared/components/scan-progress/scan-progress.component';
@@ -54,6 +55,14 @@ interface VulnSlice {
         </div>
         <div class="bottom-grid">
           @for (item of skeletons.slice(0, 3); track item) { <div class="skeleton panel-skel"></div> }
+        </div>
+      } @else if (loadError() && !summary()) {
+        <app-empty-state
+          icon="bi-exclamation-triangle"
+          title="Dashboard could not load"
+          [message]="loadError()!" />
+        <div class="text-center">
+          <button type="button" class="btn btn-primary btn-sm" (click)="reload()">Try again</button>
         </div>
       } @else if (!summary() || summary()!.totalScans === 0) {
         <app-empty-state
@@ -344,6 +353,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
 
   readonly loading = signal(true);
+  readonly loadError = signal<string | null>(null);
   readonly summary = signal<DashboardSummary | null>(null);
   readonly projects = signal<ProjectSummary[]>([]);
   readonly trends = signal<ScanTrend[]>([]);
@@ -372,38 +382,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  reload(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.summary.set(null);
+    this.projects.set([]);
+    this.trends.set([]);
+    this.metrics.set([]);
+    this.load();
+  }
+
+  private load(): void {
     this.logger.info('Dashboard loading');
     let pending = 3;
-    const done = (): void => {
+    let failed = false;
+    const done = (error = false): void => {
+      if (error) failed = true;
       pending -= 1;
-      if (pending <= 0) this.loading.set(false);
+      if (pending > 0) return;
+      this.loading.set(false);
+      if (failed && !this.summary()) {
+        this.loadError.set('Scores and scans did not come back in time. Check that the API is running, then try again.');
+      }
     };
 
-    this.scanService.getSummary().subscribe({
+    this.scanService.getSummary().pipe(timeout(20000)).subscribe({
       next: (response) => {
         if (response.success) {
           this.summary.set(response.data);
           this.metrics.set(this.buildMetrics(response.data));
+        } else {
+          failed = true;
         }
         done();
       },
-      error: () => done()
+      error: () => done(true)
     });
 
-    this.projectService.getProjects().subscribe({
+    this.projectService.getProjects().pipe(timeout(20000)).subscribe({
       next: (response) => {
         if (response.success) this.projects.set(response.data);
+        else failed = true;
         done();
       },
-      error: () => done()
+      error: () => done(true)
     });
 
-    this.scanService.getTrends().subscribe({
+    this.scanService.getTrends().pipe(timeout(20000)).subscribe({
       next: (response) => {
         if (response.success) this.trends.set(response.data);
+        else failed = true;
         done();
       },
-      error: () => done()
+      error: () => done(true)
     });
   }
 

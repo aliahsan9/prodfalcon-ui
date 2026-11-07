@@ -1,0 +1,37 @@
+<footer class="pub-foot">
+  <div class="pub-foot__grid">
+    <div class="pub-foot__brand">
+      <a routerLink="/" aria-label="ProdFalcon home">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 24 L16 4 L26 24 L16 18 Z" />
+        </svg>
+        <span>ProdFalcon</span>
+      </a>
+      <p>Upload an archive. Walk away with the structure, the risks, and a report you can actually read.</p>
+    </div>
+
+    <div>
+      <h2>Product</h2>
+      <a routerLink="/" fragment="how">How it works</a>
+      <a routerLink="/" fragment="features">Features</a>
+      <a routerLink="/" fragment="report">Sample report</a>
+    </div>
+
+    <div>
+      <h2>Workspace</h2>
+      <a routerLink="/auth/login">Sign in</a>
+      <a routerLink="/auth/register">Create account</a>
+      <a routerLink="/scans/new">Start a scan</a>
+    </div>
+
+    <div class="pub-foot__note">
+      <p class="pub-foot__kicker">Build Secure. Ship Confident.</p>
+      <p>Scans run in an isolated worker. Archives are not kept after the analysis finishes.</p>
+    </div>
+  </div>
+
+  <div class="pub-foot__legal">
+    <span>© {{ year }} ProdFalcon</span>
+    <span>AI Software Quality Platform</span>
+  </div>
+</footer>

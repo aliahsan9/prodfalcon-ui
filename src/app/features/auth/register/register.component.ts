@@ -6,8 +6,10 @@ import {
 } from '@angular/core';
 
 import {
+  AbstractControl,
   FormBuilder,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators
 } from '@angular/forms';
 
@@ -17,199 +19,134 @@ import {
   RouterLink
 } from '@angular/router';
 
-import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { safeReturnUrl } from '../../../core/guards/auth.guard';
 
+function passwordsMatch(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password')?.value;
+  const confirm = control.get('confirmPassword')?.value;
+  if (!password || !confirm) {
+    return null;
+  }
+  return password === confirm ? null : { passwordMismatch: true };
+}
+
 @Component({
   selector: 'app-register',
-
   standalone: true,
-
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink
   ],
-
   changeDetection: ChangeDetectionStrategy.OnPush,
-
-  template: `
-    <div
-      class="auth-page d-flex align-items-center justify-content-center min-vh-100 p-3"
-    >
-
-      <div
-        class="pf-card auth-card w-100"
-        style="max-width: 420px;"
-      >
-
-        <h1 class="h3 mb-1 pf-gradient-text">
-          Create account
-        </h1>
-
-        <p class="text-muted mb-4">
-          Start scanning projects in minutes
-        </p>
-
-        <form
-          [formGroup]="form"
-          (ngSubmit)="submit()"
-        >
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Full name
-            </label>
-
-            <input
-              type="text"
-              class="form-control"
-              formControlName="fullName"
-              placeholder="Enter your full name"
-            />
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Email
-            </label>
-
-            <input
-              type="email"
-              class="form-control"
-              formControlName="email"
-              placeholder="Enter your email"
-            />
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Password
-            </label>
-
-            <input
-              type="password"
-              class="form-control"
-              formControlName="password"
-              placeholder="Enter your password"
-            />
-
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary w-100"
-            [disabled]="loading() || form.invalid"
-          >
-            {{ loading() ? 'Creating...' : 'Create account' }}
-          </button>
-
-        </form>
-
-        <p class="mt-3 mb-0 text-center text-muted small">
-
-          Already have an account?
-
-          <a routerLink="/auth/login">
-            Sign in
-          </a>
-
-        </p>
-
-      </div>
-
-    </div>
-  `,
-
-  styles: [`
-    .auth-card {
-      border-radius: 16px;
-    }
-    .auth-page {
-      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-    }
-  `]
+  templateUrl: './register.component.html',
+  styleUrl: './register.component.scss'
 })
 export class RegisterComponent {
-
   private readonly fb = inject(FormBuilder);
-
   private readonly authService = inject(AuthService);
-
   private readonly router = inject(Router);
-
   private readonly route = inject(ActivatedRoute);
-
   private readonly toast = inject(ToastService);
 
   readonly loading = signal(false);
+  readonly showPassword = signal(false);
+  readonly submitted = signal(false);
+  readonly strength = signal(0);
 
   readonly form = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    organizationName: [''],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    confirmPassword: ['', [Validators.required]]
+  }, { validators: passwordsMatch });
 
-    fullName: [
-      '',
-      [
-        Validators.required
-      ]
-    ],
+  constructor() {
+    this.form.controls.password.valueChanges.pipe(
+      startWith(this.form.controls.password.value),
+      takeUntilDestroyed()
+    ).subscribe((value) => this.strength.set(this.score(value)));
+  }
 
-    email: [
-      '',
-      [
-        Validators.required,
-        Validators.email
-      ]
-    ],
+  loginParams(): Record<string, string> {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    return returnUrl ? { returnUrl } : {};
+  }
 
-    password: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(6)
-      ]
-    ]
-  });
+  showError(name: 'fullName' | 'email' | 'password' | 'confirmPassword'): boolean {
+    const control = this.form.controls[name];
+    return control.invalid && (control.touched || this.submitted());
+  }
+
+  mismatch(): boolean {
+    const confirm = this.form.controls.confirmPassword;
+    return this.form.hasError('passwordMismatch') && (confirm.touched || this.submitted());
+  }
+
+  emailMessage(): string {
+    return this.form.controls.email.hasError('email')
+      ? 'Enter a valid email address.'
+      : 'Email is required.';
+  }
+
+  passwordMessage(): string {
+    return this.form.controls.password.hasError('minlength')
+      ? 'Use at least 6 characters.'
+      : 'Password is required.';
+  }
+
+  strengthLabel(): string {
+    return ['', 'Weak', 'Okay', 'Good', 'Strong'][this.strength()] ?? '';
+  }
 
   submit(): void {
+    this.submitted.set(true);
 
     if (this.form.invalid) {
-
       this.form.markAllAsTouched();
-
       return;
     }
 
     this.loading.set(true);
+    const raw = this.form.getRawValue();
+    const organizationName = raw.organizationName.trim();
 
-    const payload = this.form.getRawValue();
-
-    this.authService.register(payload).subscribe({
-
+    this.authService.register({
+      fullName: raw.fullName.trim(),
+      email: raw.email.trim(),
+      password: raw.password,
+      organizationName: organizationName || undefined
+    }).subscribe({
       next: () => {
-
         this.loading.set(false);
-
         this.toast.success('Account created successfully!');
-
         this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
       },
-
       error: (error) => {
-
         console.error('Registration failed:', error);
-
         this.loading.set(false);
-
-        this.toast.error?.('Registration failed');
+        const apiMessage = error?.error?.message as string | undefined;
+        this.toast.error(apiMessage || 'Registration failed');
       }
     });
+  }
+
+  private score(value: string): number {
+    if (!value) {
+      return 0;
+    }
+    if (value.length < 6) {
+      return 1;
+    }
+    let score = 1;
+    if (value.length >= 8) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value) && /[^A-Za-z0-9]/.test(value)) score++;
+    return Math.min(score, 4);
   }
 }

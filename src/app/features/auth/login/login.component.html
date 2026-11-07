@@ -1,0 +1,115 @@
+<section class="auth-stage">
+  <div class="auth-story">
+    <div class="auth-story__glow" aria-hidden="true"></div>
+    <p class="auth-kicker">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24 L16 4 L26 24 L16 18 Z" /></svg>
+      Workspace
+    </p>
+    <h2>Pick up every scan exactly where you left it.</h2>
+    <p class="auth-lede">
+      Sign in to reopen reports, review findings, and send the next archive through an isolated worker.
+    </p>
+    <ul class="auth-points">
+      <li>
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <div>
+          <strong>Isolated by default</strong>
+          <span>Each archive is unpacked in its own worker.</span>
+        </div>
+      </li>
+      <li>
+        <i class="bi bi-trash3" aria-hidden="true"></i>
+        <div>
+          <strong>Nothing kept afterward</strong>
+          <span>Files are dropped once the report is ready.</span>
+        </div>
+      </li>
+      <li>
+        <i class="bi bi-diagram-3" aria-hidden="true"></i>
+        <div>
+          <strong>One workspace, every project</strong>
+          <span>Structure, risks, and history stay in one place.</span>
+        </div>
+      </li>
+    </ul>
+
+    <div class="auth-preview" aria-hidden="true">
+      <div class="auth-preview__bar">
+        <span></span><span></span><span></span>
+        <em>scan-report.json</em>
+      </div>
+      <div class="auth-preview__scan"></div>
+      <div class="auth-preview__body">
+        <p class="ok">✓ 1,204 files mapped across 86 folders</p>
+        <p class="ok">✓ Stack detected · Angular · .NET 8</p>
+        <p class="warn">! 3 files exceed 10MB</p>
+        <p class="muted">No exposed secrets found</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-panel">
+    <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="auth-card__accent" aria-hidden="true"></div>
+      <p class="auth-kicker">Sign in</p>
+      <h1>Welcome back</h1>
+      <p class="auth-card__sub">Use the email for your ProdFalcon workspace.</p>
+
+      <label class="auth-field" [class.is-invalid]="showError('email')">
+        <span class="auth-field__label">Email</span>
+        <span class="auth-field__control">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          <input
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="you@company.com"
+            [attr.aria-invalid]="showError('email')"
+          />
+        </span>
+        @if (showError('email')) {
+          <span class="auth-field__error">{{ emailMessage() }}</span>
+        }
+      </label>
+
+      <label class="auth-field" [class.is-invalid]="showError('password')">
+        <span class="auth-field__label">Password</span>
+        <span class="auth-field__control">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            [attr.aria-invalid]="showError('password')"
+          />
+          <button
+            type="button"
+            class="auth-eye"
+            (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          >
+            <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()" aria-hidden="true"></i>
+          </button>
+        </span>
+        @if (showError('password')) {
+          <span class="auth-field__error">Password is required.</span>
+        }
+      </label>
+
+      <button type="submit" class="auth-submit" [disabled]="loading()">
+        @if (loading()) {
+          <span class="auth-spinner" aria-hidden="true"></span>
+          Signing in…
+        } @else {
+          Sign in
+        }
+      </button>
+
+      <p class="auth-switch">
+        New to ProdFalcon?
+        <a routerLink="/auth/register" [queryParams]="registerParams()">Create an account</a>
+      </p>
+    </form>
+  </div>
+</section>

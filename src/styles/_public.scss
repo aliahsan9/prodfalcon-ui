@@ -1,0 +1,18 @@
+@mixin pub-tokens {
+  --pub-bg: #10141c;
+  --pub-bg-deep: #0c0f16;
+  --pub-surface: #161b26;
+  --pub-surface-2: #1d2431;
+  --pub-border: #2a3142;
+  --pub-text: #edeff4;
+  --pub-muted: #9aa3b8;
+  --pub-faint: #6d768c;
+  --pub-amber: #e8a33d;
+  --pub-amber-2: #f3b65a;
+  --pub-ink: #1a1305;
+  --pub-teal: #4fd1c5;
+  --pub-rose: #e8687f;
+  --pub-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --pub-body: 'Inter', 'Segoe UI', sans-serif;
+  --pub-mono: 'JetBrains Mono', ui-monospace, monospace;
+}

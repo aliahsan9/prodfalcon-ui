@@ -1,0 +1,222 @@
+@use '../../../styles/public' as *;
+
+:host {
+  @include pub-tokens;
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  font-family: var(--pub-body);
+  color: var(--pub-text);
+}
+
+.pub-nav {
+  background: rgba(16, 20, 28, 0.72);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &--scrolled,
+  &--open {
+    background: rgba(12, 15, 22, 0.94);
+    border-bottom-color: var(--pub-border);
+  }
+
+  &__bar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    height: 72px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--pub-text);
+    text-decoration: none;
+    font-family: var(--pub-display);
+    font-weight: 600;
+    font-size: 1.16rem;
+    letter-spacing: -0.02em;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--pub-amber);
+      filter: drop-shadow(0 0 8px rgba(232, 163, 61, 0.45));
+    }
+  }
+
+  &__links {
+    display: flex;
+    justify-content: center;
+    gap: 1.75rem;
+
+    a {
+      color: var(--pub-muted);
+      text-decoration: none;
+      font-size: 0.94rem;
+      font-weight: 500;
+
+      &:hover {
+        color: var(--pub-text);
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  &__text,
+  &__ghost,
+  &__solid {
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  &__text {
+    color: var(--pub-muted);
+    padding: 0.45rem 0.7rem;
+
+    &:hover,
+    &.is-current {
+      color: var(--pub-text);
+    }
+  }
+
+  &__ghost {
+    color: var(--pub-text);
+    border: 1px solid var(--pub-border);
+    padding: 0.48rem 0.9rem;
+
+    &:hover {
+      border-color: var(--pub-muted);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    &.is-current {
+      border-color: var(--pub-amber);
+      color: var(--pub-amber-2);
+    }
+  }
+
+  &__solid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pub-amber);
+    color: var(--pub-ink);
+    padding: 0.52rem 1rem;
+    font-weight: 700;
+    box-shadow: 0 8px 18px rgba(232, 163, 61, 0.22);
+
+    &:hover {
+      background: var(--pub-amber-2);
+      color: var(--pub-ink);
+    }
+  }
+
+  &__toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    margin-left: auto;
+    border: 1px solid var(--pub-border);
+    border-radius: 12px;
+    background: transparent;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+
+    span {
+      display: block;
+      width: 16px;
+      height: 1.5px;
+      border-radius: 2px;
+      background: var(--pub-text);
+    }
+  }
+
+  &--open &__toggle span:nth-child(1) {
+    transform: translateY(6.5px) rotate(45deg);
+  }
+
+  &--open &__toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  &--open &__toggle span:nth-child(3) {
+    transform: translateY(-6.5px) rotate(-45deg);
+  }
+
+  &__toggle span {
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  &__mobile {
+    display: none;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.35rem 1.25rem 1.1rem;
+    border-top: 1px solid var(--pub-border);
+
+    a {
+      color: var(--pub-text);
+      text-decoration: none;
+      padding: 0.8rem 0.15rem;
+      border-bottom: 1px solid rgba(42, 49, 66, 0.85);
+      font-weight: 600;
+    }
+
+    .pub-nav__solid {
+      margin-top: 0.85rem;
+      border-bottom: 0;
+      padding: 0.75rem 1rem;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .pub-nav__ghost {
+    display: none;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .pub-nav__bar {
+    display: flex;
+  }
+
+  .pub-nav__links,
+  .pub-nav__actions {
+    display: none;
+  }
+
+  .pub-nav__toggle {
+    display: inline-flex;
+  }
+
+  .pub-nav__mobile {
+    display: flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pub-nav__toggle span {
+    transition: none;
+  }
+}
