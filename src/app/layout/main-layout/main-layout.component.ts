@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, effect, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
+import { ShellService } from '../../core/services/shell.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -10,7 +11,7 @@ import { FooterComponent } from '../footer/footer.component';
   imports: [RouterOutlet, SidebarComponent, NavbarComponent, FooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="app-shell d-flex" [class.pf-mobile-sidebar-open]="sidebarOpen()">
+    <div class="app-shell d-flex" [class.pf-mobile-sidebar-open]="sidebarOpen()" [class.collapsed]="shell.collapsed()">
       @if (sidebarOpen()) {
         <div class="sidebar-backdrop d-lg-none" (click)="sidebarOpen.set(false)"></div>
       }
@@ -32,11 +33,12 @@ import { FooterComponent } from '../footer/footer.component';
       overflow-x: clip;
     }
     .app-main {
-      margin-left: 260px;
-      transition: margin-left 0.25s ease;
+      margin-left: 248px;
+      transition: margin-left 0.2s ease;
       min-width: 0;
       width: 100%;
     }
+    .collapsed .app-main { margin-left: 76px; }
     .app-content {
       min-width: 0;
       max-width: 100%;
@@ -49,12 +51,13 @@ import { FooterComponent } from '../footer/footer.component';
       -webkit-tap-highlight-color: transparent;
     }
     @media (max-width: 991px) {
-      .app-main { margin-left: 0; }
+      .app-main, .collapsed .app-main { margin-left: 0; }
     }
   `]
 })
 export class MainLayoutComponent implements OnDestroy {
   readonly sidebarOpen = signal(false);
+  readonly shell = inject(ShellService);
 
   constructor() {
     effect(() => {

@@ -53,7 +53,7 @@ export class BillingComponent implements OnInit {
   readonly plans = [
     { name: 'Free', tier: 'Free' as SubscriptionTier, price: '$0', features: ['5 scans/month', 'Basic rules', 'Dashboard'] },
     { name: 'Pro', tier: 'Pro' as SubscriptionTier, price: '$29', features: ['100 scans', 'AI suggestions', 'CI/CD', 'Reports'] },
-    { name: 'Enterprise', tier: 'Enterprise' as SubscriptionTier, price: '$99', features: ['Unlimited scans', 'PR auto-fix', 'Compliance', 'API access'] }
+    { name: 'Enterprise', tier: 'Enterprise' as SubscriptionTier, price: '$99', features: ['Unlimited scans', 'GitHub Actions checks', 'API access'] }
   ];
 
   ngOnInit(): void {

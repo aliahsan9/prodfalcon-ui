@@ -90,6 +90,70 @@ export const routes: Routes = [
       },
 
       {
+        path: 'scans/new',
+        loadComponent: () =>
+          import('./features/upload/upload.component')
+            .then(m => m.UploadComponent)
+      },
+
+      {
+        path: 'history',
+        loadComponent: () =>
+          import('./features/scans/history/scan-history.component')
+            .then(m => m.ScanHistoryComponent)
+      },
+
+      {
+        path: 'vulnerabilities',
+        loadComponent: () =>
+          import('./features/vulnerabilities/vulnerabilities.component')
+            .then(m => m.VulnerabilitiesComponent)
+      },
+
+      {
+        path: 'quality',
+        loadComponent: () =>
+          import('./features/vulnerabilities/vulnerabilities.component')
+            .then(m => m.VulnerabilitiesComponent)
+      },
+
+      {
+        path: 'remediation',
+        loadComponent: () =>
+          import('./features/vulnerabilities/vulnerabilities.component')
+            .then(m => m.VulnerabilitiesComponent)
+      },
+
+      {
+        path: 'architecture',
+        loadComponent: () =>
+          import('./features/architecture/architecture-explorer.component')
+            .then(m => m.ArchitectureExplorerComponent)
+      },
+
+      {
+        path: 'threats',
+        loadComponent: () =>
+          import('./features/architecture/architecture-explorer.component')
+            .then(m => m.ArchitectureExplorerComponent),
+        data: { mode: 'threats' }
+      },
+
+      {
+        path: 'integrations',
+        loadComponent: () =>
+          import('./features/integrations/integrations.component')
+            .then(m => m.IntegrationsComponent)
+      },
+
+      {
+        path: 'assistant',
+        loadComponent: () =>
+          import('./features/assistant/assistant.component')
+            .then(m => m.AssistantComponent)
+      },
+
+      {
         path: 'scans/:id',
         loadComponent: () =>
           import('./features/scans/scan-detail/scan-detail.component')
@@ -103,12 +167,7 @@ export const routes: Routes = [
             .then(m => m.AiSuggestionsComponent)
       },
 
-      {
-        path: 'ci-cd',
-        loadComponent: () =>
-          import('./features/ci-cd/ci-cd.component')
-            .then(m => m.CiCdComponent)
-      },
+      { path: 'ci-cd', redirectTo: 'integrations', pathMatch: 'full' },
 
       {
         path: 'billing',

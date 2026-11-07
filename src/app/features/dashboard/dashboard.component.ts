@@ -43,11 +43,11 @@ Chart.register(...registerables);
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header
-      title="Engineering Health"
+      title="Security overview"
       [subtitle]="headerSubtitle()"
       actionLabel="New scan"
-      actionRoute="/upload"
-      actionIcon="bi-cloud-upload" />
+      actionRoute="/scans/new"
+      actionIcon="bi-shield-plus" />
 
     @if (loading()) {
       <app-skeleton-loader [count]="4" [columns]="4" [height]="140" />
@@ -59,9 +59,9 @@ Chart.register(...registerables);
       <app-empty-state
         icon="bi-speedometer2"
         title="No scans yet"
-        message="Upload a ZIP to generate your first production readiness report."
-        actionLabel="Upload project"
-        actionRoute="/upload" />
+        message="Submit a GitHub repository or ZIP archive to generate the first evidence-based assessment."
+        actionLabel="New scan"
+        actionRoute="/scans/new" />
     } @else {
       <!-- Overall health hero -->
       <div class="row g-3 mb-3">
@@ -78,20 +78,17 @@ Chart.register(...registerables);
         </div>
         <div class="col-12 col-lg-8">
           <div class="pf-card h-100 d-flex flex-column justify-content-center">
-            <div class="row text-center g-2 g-sm-3">
-              <div class="col-4">
-                <div class="text-muted small">Projects</div>
-                <div class="h4 mb-0">{{ summary()!.totalProjects }}</div>
-              </div>
-              <div class="col-4">
-                <div class="text-muted small">Scans</div>
-                <div class="h4 mb-0">{{ summary()!.totalScans }}</div>
-              </div>
-              <div class="col-4">
-                <div class="text-muted small">Issues</div>
-                <div class="h4 mb-0">{{ summary()!.totalIssues }}</div>
-              </div>
+            <div class="row text-center g-2">
+              <div class="col-6 col-md-3"><div class="text-muted small">Projects</div><div class="h5 mb-0">{{ summary()!.totalProjects }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Scans</div><div class="h5 mb-0">{{ summary()!.totalScans }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Critical</div><div class="h5 mb-0">{{ severityCount('Critical') }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">High</div><div class="h5 mb-0">{{ severityCount('High') }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Medium</div><div class="h5 mb-0">{{ severityCount('Medium') }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Low</div><div class="h5 mb-0">{{ severityCount('Low') }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Resolved</div><div class="h5 mb-0">{{ summary()!.resolvedIssues ?? 0 }}</div></div>
+              <div class="col-6 col-md-3"><div class="text-muted small">Open</div><div class="h5 mb-0">{{ summary()!.openIssues ?? summary()!.totalIssues }}</div></div>
             </div>
+            <p class="small text-muted mb-0 mt-3">Scores are indicative assessments of detected findings, not proof a project is secure.</p>
           </div>
         </div>
       </div>
@@ -132,7 +129,7 @@ Chart.register(...registerables);
         </div>
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="pf-card">
-            <h2 class="h6 mb-3">Architecture quality</h2>
+            <h2 class="h6 mb-3">Category scores</h2>
             <div class="pf-chart-wrap">
               <canvas #radarChart height="200"></canvas>
             </div>
@@ -165,8 +162,8 @@ Chart.register(...registerables);
               @for (p of projects().slice(0, 5); track p.projectId) {
                 <li>
                   <div class="text-truncate min-w-0">
-                    <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.fileName }}</a>
-                    <div class="small text-muted">{{ p.uploadedAt | date:'mediumDate' }}</div>
+                    <a [routerLink]="['/scans', p.latestScanResultId]">{{ p.displayName || p.fileName }}</a>
+                    <div class="small text-muted">{{ p.uploadedAt | date:'medium' }} · {{ p.latestStatus || p.status }} · {{ p.latestDurationMs || 0 }} ms</div>
                   </div>
                   <span class="badge text-bg-secondary flex-shrink-0">{{ p.latestScore }}</span>
                 </li>
@@ -202,7 +199,7 @@ Chart.register(...registerables);
                 <li class="small pf-break-word">{{ rec }}</li>
               }
             </ul>
-            <a routerLink="/ai-suggestions" class="btn btn-outline-primary btn-sm mt-2">Open AI assistant</a>
+            <a routerLink="/assistant" class="btn btn-outline-primary btn-sm mt-2">Open AI assistant</a>
           </div>
         </div>
         <div class="col-12 col-md-6 col-xl-4">
@@ -235,13 +232,10 @@ Chart.register(...registerables);
         </div>
         <div class="col-12 col-md-6 col-xl-4">
           <div class="pf-card h-100">
-            <h2 class="h6 mb-3"><i class="bi bi-stack me-1"></i> Technical debt</h2>
-            <div class="display-6 fw-bold">{{ summary()!.technicalDebtScore }}</div>
-            <p class="small text-muted mb-2">Debt health score (higher is better)</p>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-warning" [style.width.%]="summary()!.technicalDebtScore"></div>
-            </div>
-            <a routerLink="/reports" class="btn btn-link btn-sm px-0 mt-2">View full report</a>
+            <h2 class="h6 mb-3">Resolved findings</h2>
+            <div class="display-6 fw-bold">{{ summary()!.resolvedIssues ?? 0 }}</div>
+            <p class="small text-muted mb-0">Findings marked resolved in the vulnerability explorer.</p>
+            <a routerLink="/vulnerabilities" class="btn btn-link btn-sm px-0 mt-2">Review findings</a>
           </div>
         </div>
       </div>
@@ -401,6 +395,18 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return 'text-bg-danger';
   }
 
+  severityCount(name: string): number {
+    const summary = this.summary();
+    if (!summary) return 0;
+    const explicit: Record<string, number | undefined> = {
+      Critical: summary.criticalVulnerabilities,
+      High: summary.highVulnerabilities,
+      Medium: summary.mediumVulnerabilities,
+      Low: summary.lowVulnerabilities
+    };
+    return explicit[name] ?? summary.issuesBySeverity?.[name] ?? 0;
+  }
+
   openMetric(key: string): void {
     const metric = this.metrics().find((m) => m.key === key)
       ?? this.metrics().find((m) => m.label === key)
@@ -421,17 +427,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private buildMetrics(s: DashboardSummary): HealthMetric[] {
     return [
-      { key: 'security', label: 'Security Score', icon: 'bi-shield-lock', score: s.averageSecurityScore, description: 'Secrets, auth gaps, injection risks, and OWASP-related findings.' },
-      { key: 'maintainability', label: 'Maintainability Score', icon: 'bi-tools', score: s.averageMaintainabilityScore, description: 'Code structure, smells, and long-term maintainability signals.' },
-      { key: 'performance', label: 'Performance Score', icon: 'bi-lightning-charge', score: s.averagePerformanceScore, description: 'Hot paths, inefficient patterns, and performance rule hits.' },
-      { key: 'architecture', label: 'Architecture Score', icon: 'bi-diagram-3', score: s.architectureScore, description: 'Blend of maintainability and performance indicating structural quality.' },
-      { key: 'documentation', label: 'Documentation Score', icon: 'bi-journal-text', score: s.documentationScore, description: 'Estimated documentation health derived from maintainability signals.' },
-      { key: 'coverage', label: 'Test Coverage Score', icon: 'bi-clipboard2-check', score: s.testCoverageScore, description: 'Heuristic coverage readiness until dedicated test analysis lands in Phase 4.' },
-      { key: 'debt', label: 'Technical Debt Score', icon: 'bi-stack', score: s.technicalDebtScore, description: 'Inverse of smell density and critical findings — higher means healthier.' },
-      { key: 'smells', label: 'Code Smells', icon: 'bi-emoji-dizzy', score: s.codeSmellsScore, description: 'How clean the codebase is relative to issue volume.' },
-      { key: 'complexity', label: 'Complexity', icon: 'bi-share', score: s.complexityScore, description: 'Structural complexity inferred from maintainability and performance.' },
-      { key: 'bugrisk', label: 'Bug Risk', icon: 'bi-bug', score: s.bugRiskScore, description: 'Likelihood of defects based on security posture and severity mix. Higher is safer.' },
-      { key: 'production', label: 'Production Readiness', icon: 'bi-rocket-takeoff', score: s.averageProductionReadinessScore, description: 'Debug flags, logging, CORS, and release-hardening checks.' }
+      { key: 'security', label: 'Security score', icon: 'bi-shield-lock', score: s.averageSecurityScore, description: 'Average of security scores calculated from open findings.' },
+      { key: 'maintainability', label: 'Maintainability', icon: 'bi-tools', score: s.averageMaintainabilityScore, description: 'Score from quality and maintainability findings.' },
+      { key: 'performance', label: 'Performance', icon: 'bi-lightning-charge', score: s.averagePerformanceScore, description: 'Score from performance findings.' },
+      { key: 'production', label: 'Configuration', icon: 'bi-sliders', score: s.averageProductionReadinessScore, description: 'Score from configuration and production-hardening findings.' },
+      { key: 'architecture', label: 'Architecture', icon: 'bi-diagram-3', score: s.architectureScore, description: 'Starts at 100. Only open Architecture findings reduce it. A score of 100 means none were stored, not that the design was approved.' },
+      { key: 'complexity', label: 'Complexity', icon: 'bi-share', score: s.complexityScore, description: 'Starts at 100 and falls only when a high-complexity finding is open. Documentation and test coverage are not measured.' }
     ];
   }
 
@@ -497,16 +498,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.charts.push(new Chart(this.radarChartRef.nativeElement, {
         type: 'radar',
         data: {
-          labels: ['Security', 'Maintainability', 'Performance', 'Architecture', 'Production', 'Debt'],
+          labels: ['Security', 'Maintainability', 'Performance', 'Configuration'],
           datasets: [{
-            label: 'Quality',
+            label: 'Scores',
             data: [
               s.averageSecurityScore,
               s.averageMaintainabilityScore,
               s.averagePerformanceScore,
-              s.architectureScore,
-              s.averageProductionReadinessScore,
-              s.technicalDebtScore
+              s.averageProductionReadinessScore
             ],
             backgroundColor: 'rgba(99, 102, 241, 0.25)',
             borderColor: '#8b5cf6',

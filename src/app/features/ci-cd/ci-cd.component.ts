@@ -1,56 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { BillingService } from '../../core/services/billing.service';
-import { UpgradeBannerComponent } from '../../shared/components/upgrade-banner/upgrade-banner.component';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-ci-cd',
   standalone: true,
-  imports: [UpgradeBannerComponent],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="h3 mb-1 pf-page-title">CI/CD integrations</h1>
-    <p class="text-muted mb-3 mb-md-4">Connect repositories and scan every pull request</p>
-
-    @if (!billing.isProFeature()) {
-      <app-upgrade-banner title="CI/CD requires Pro" message="Connect GitHub and block merges on critical findings." class="mb-4 d-block" />
-    }
-
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-md-4">
-        <div class="pf-card h-100">
-          <h2 class="h6"><i class="bi bi-github me-2"></i>GitHub</h2>
-          <span class="badge text-bg-warning mb-2">Not connected</span>
-          <p class="small text-muted">Scan PRs and comment on issues automatically.</p>
-          <button class="btn btn-sm btn-outline-secondary">Connect GitHub</button>
-        </div>
-      </div>
-      <div class="col-12 col-md-4">
-        <div class="pf-card h-100 opacity-75">
-          <h2 class="h6"><i class="bi bi-gitlab me-2"></i>GitLab</h2>
-          <span class="badge text-bg-secondary mb-2">Coming soon</span>
-        </div>
-      </div>
-      <div class="col-12 col-md-4">
-        <div class="pf-card h-100 opacity-75">
-          <h2 class="h6"><i class="bi bi-microsoft me-2"></i>Azure DevOps</h2>
-          <span class="badge text-bg-secondary mb-2">Coming soon</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="pf-card">
-      <h2 class="h6 mb-3">PR scan history</h2>
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead><tr><th>Repository</th><th>PR</th><th>Score</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td colspan="4" class="text-muted text-center py-4">Connect GitHub to see PR scan results</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <h1 class="h3 mb-1 pf-page-title">CI/CD</h1>
+    <p class="text-muted">GitHub checks are configured on the integrations page. ProdFalcon does not connect a GitHub App from this screen.</p>
+    <a class="btn btn-primary" routerLink="/integrations">Open integrations</a>
   `
 })
-export class CiCdComponent {
-  readonly billing = inject(BillingService);
-}
+export class CiCdComponent {}

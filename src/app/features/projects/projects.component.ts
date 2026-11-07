@@ -81,9 +81,12 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
               </div>
               <div class="d-flex gap-2 flex-wrap">
                 @if (p.latestScanResultId) {
-                  <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-outline-primary btn-sm">View scan</a>
+                  <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-outline-primary btn-sm">Scan</a>
+                  <a [routerLink]="['/architecture']" [queryParams]="{ scanId: p.latestScanResultId }" class="btn btn-outline-secondary btn-sm">Architecture</a>
+                  <a [routerLink]="['/assistant']" [queryParams]="{ scanResultId: p.latestScanResultId }" class="btn btn-outline-secondary btn-sm">Copilot</a>
                 }
-                <a [routerLink]="['/ai-suggestions']" [queryParams]="{ scanResultId: p.latestScanResultId }" class="btn btn-outline-secondary btn-sm">AI</a>
+                <a [routerLink]="['/vulnerabilities']" [queryParams]="{ projectId: p.projectId }" class="btn btn-outline-secondary btn-sm">Security</a>
+                <a [routerLink]="['/quality']" [queryParams]="{ projectId: p.projectId }" class="btn btn-outline-secondary btn-sm">Quality</a>
               </div>
             </div>
           </div>

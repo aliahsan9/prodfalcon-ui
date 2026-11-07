@@ -12,7 +12,7 @@ import {
 import { Chart, registerables } from 'chart.js';
 import { ScanService } from '../../core/services/scan.service';
 import { LoggerService } from '../../core/services/logger.service';
-import { DashboardSummary } from '../../core/models/scan.model';
+import { DashboardSummary, ScanHistoryItem } from '../../core/models/scan.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { SkeletonLoaderComponent } from '../../shared/components/skeleton-loader/skeleton-loader.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -29,8 +29,25 @@ Chart.register(...registerables);
       title="Reports & analytics"
       subtitle="Risk analytics, severity mix, and rule violation breakdown"
       actionLabel="New scan"
-      actionRoute="/upload"
-      actionIcon="bi-cloud-upload" />
+      actionRoute="/scans/new"
+      actionIcon="bi-shield-plus" />
+
+    <div class="pf-card mb-3">
+      <h2 class="h6">Download a scan report</h2>
+      <p class="small text-muted">JSON, CSV, and PDF are generated from the saved scan. Secret values are redacted.</p>
+      @for (item of downloads(); track item.scanResultId) {
+        <div class="d-flex justify-content-between align-items-center gap-2 py-1 border-bottom">
+          <span class="text-truncate">{{ item.projectName }} · {{ item.score }}/100</span>
+          <span class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'json', item.projectName)">JSON</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'csv', item.projectName)">CSV</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'pdf', item.projectName)">PDF</button>
+          </span>
+        </div>
+      } @empty {
+        <p class="small text-muted mb-0">Completed scans will appear here.</p>
+      }
+    </div>
 
     @if (loading()) {
       <app-skeleton-loader [count]="4" [columns]="4" [height]="100" />
@@ -96,12 +113,16 @@ export class ReportsComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly scanService = inject(ScanService);
   private readonly logger = inject(LoggerService);
   readonly summary = signal<DashboardSummary | null>(null);
+  readonly downloads = signal<ScanHistoryItem[]>([]);
   readonly loading = signal(true);
   private charts: Chart[] = [];
   private viewReady = false;
 
   ngOnInit(): void {
     this.logger.info('Reports page loading');
+    this.scanService.getHistory().subscribe({
+      next: (response) => this.downloads.set((response.data?.items ?? []).filter((item) => item.status === 'Completed'))
+    });
     this.scanService.getSummary().subscribe({
       next: (r) => {
         if (r.success) this.summary.set(r.data);
@@ -119,6 +140,17 @@ export class ReportsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.charts.forEach((c) => c.destroy());
+  }
+
+  download(id: number, format: 'json' | 'csv' | 'pdf', name: string): void {
+    this.scanService.downloadReport(id, format).subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `${name || 'scan'}-security.${format}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    });
   }
 
   severityEntries(): [string, number][] {
