@@ -39,15 +39,31 @@ interface ChatMessage {
       }
     </div>
 
-    <form class="d-flex gap-2" (submit)="ask(); $event.preventDefault()">
+    <form class="ask-form" (submit)="ask(); $event.preventDefault()">
       <input class="form-control" [formControl]="question" placeholder="What should I fix first?" aria-label="Question" />
-      <button class="btn btn-primary" type="submit" [disabled]="pending()">Ask</button>
+      <button class="btn btn-primary ask-submit" type="submit" [disabled]="pending()">Ask</button>
     </form>
   `,
   styles: [`
-    .chat { display: flex; flex-direction: column; gap: 0.75rem; min-height: 180px; }
-    .message { border: 1px solid var(--pf-border); border-radius: 8px; padding: 0.75rem; white-space: pre-wrap; }
+    :host { display: block; min-width: 0; max-width: 100%; }
+    .chat { display: flex; flex-direction: column; gap: 0.75rem; min-height: 180px; max-width: 100%; }
+    .message {
+      border: 1px solid var(--pf-border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+    }
     .message.user { background: rgba(37, 99, 235, 0.08); }
+    .ask-form { display: flex; gap: 0.5rem; align-items: stretch; min-width: 0; }
+    .ask-form .form-control { min-width: 0; flex: 1; }
+    .ask-submit { min-height: 42px; white-space: nowrap; padding-inline: 1.1rem; font-weight: 700; }
+    @media (max-width: 575px) {
+      .ask-form { flex-direction: column; }
+      .ask-submit { width: 100%; min-height: 44px; }
+      .chat { min-height: 140px; }
+    }
   `]
 })
 export class AssistantComponent implements OnInit {

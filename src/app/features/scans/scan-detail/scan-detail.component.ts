@@ -29,80 +29,240 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
     } @else if (!scan()) {
       <app-empty-state title="Scan not found" message="This scan is not in the current workspace." actionLabel="Scan history" actionRoute="/history" />
     } @else if (!running()) {
-      <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
-        <div>
-          <h1 class="h4 mb-1">{{ scan()!.projectName || ('Scan #' + scan()!.scanResultId) }}</h1>
-          <p class="small text-muted mb-0">
-            {{ scan()!.status }} · {{ scan()!.stageMessage || scan()!.stage }} · {{ scan()!.durationMs }} ms
-            @if (scan()!.repositoryUrl) { · {{ scan()!.repositoryUrl }} }
-            @if (scan()!.branch) { · {{ scan()!.branch }} }
-          </p>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="download('json')">JSON</button>
-          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="download('csv')">CSV</button>
-          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="download('pdf')">PDF</button>
-          <a class="btn btn-primary btn-sm" [routerLink]="['/assistant']">Ask assistant</a>
-        </div>
-      </div>
-
-      <div class="row g-2 mb-3">
-        <div class="col-12 col-md-4"><app-score-card label="Indicative score" [score]="scan()!.overallScore" variant="circular" /></div>
-        <div class="col-6 col-md-2"><app-score-card label="Security" [score]="scan()!.securityScore" [compact]="true" /></div>
-        <div class="col-6 col-md-2"><app-score-card label="Quality" [score]="scan()!.maintainabilityScore" [compact]="true" /></div>
-        <div class="col-6 col-md-2"><app-score-card label="Performance" [score]="scan()!.performanceScore" [compact]="true" /></div>
-        <div class="col-6 col-md-2"><app-score-card label="Config" [score]="scan()!.productionReadinessScore" [compact]="true" /></div>
-      </div>
-
-      <div class="pf-card mb-3">
-        <div class="d-flex justify-content-between flex-wrap gap-2">
-          <div>
-            <strong>{{ scan()!.riskLevel || 'Unrated' }} risk</strong>
-            <span class="text-muted small"> · {{ scan()!.fileCount || 0 }} files · {{ scan()!.totalIssues }} findings</span>
-            @if (scan()!.previousScore !== null && scan()!.previousScore !== undefined) {
-              <span class="text-muted small"> · previous {{ scan()!.previousScore }} ({{ scan()!.scoreChange }})</span>
+      <div class="scan-page">
+        <header class="scan-head">
+          <div class="scan-head__copy">
+            <h1>{{ scan()!.projectName || ('Scan #' + scan()!.scanResultId) }}</h1>
+            <p class="scan-meta">
+              <span>{{ scan()!.status }}</span>
+              <span>{{ scan()!.stageMessage || scan()!.stage }}</span>
+              <span>{{ scan()!.durationMs }} ms</span>
+              @if (scan()!.branch) { <span>{{ scan()!.branch }}</span> }
+            </p>
+            @if (scan()!.repositoryUrl) {
+              <p class="scan-url">{{ scan()!.repositoryUrl }}</p>
             }
           </div>
-          <div class="small">{{ (scan()!.technologies || []).join(', ') || 'No technologies detected' }}</div>
-        </div>
-        <p class="small text-muted mb-0 mt-2">{{ scan()!.scoringNote }}</p>
-      </div>
+          <div class="scan-actions">
+            <div class="scan-exports" role="group" aria-label="Download report">
+              <button class="btn btn-outline-secondary" type="button" (click)="download('json')">JSON</button>
+              <button class="btn btn-outline-secondary" type="button" (click)="download('csv')">CSV</button>
+              <button class="btn btn-outline-secondary" type="button" (click)="download('pdf')">PDF</button>
+            </div>
+            <a
+              class="btn btn-primary scan-ask"
+              [routerLink]="['/assistant']"
+              [queryParams]="{ scanResultId: scan()!.scanResultId }">
+              <i class="bi bi-robot" aria-hidden="true"></i>
+              Ask assistant
+            </a>
+          </div>
+        </header>
 
-      <div class="d-flex gap-1 flex-wrap mb-3">
-        @for (sev of severityFilters; track sev) {
-          <button class="btn btn-sm" [class.btn-primary]="severity() === sev" [class.btn-outline-secondary]="severity() !== sev" type="button" (click)="severity.set(sev)">{{ sev }}</button>
+        <div class="scan-scores">
+          <app-score-card label="Indicative score" [score]="scan()!.overallScore" variant="circular" />
+          <app-score-card label="Security" [score]="scan()!.securityScore" [compact]="true" />
+          <app-score-card label="Quality" [score]="scan()!.maintainabilityScore" [compact]="true" />
+          <app-score-card label="Performance" [score]="scan()!.performanceScore" [compact]="true" />
+          <app-score-card label="Config" [score]="scan()!.productionReadinessScore" [compact]="true" />
+        </div>
+
+        <div class="pf-card scan-summary">
+          <div class="scan-summary__row">
+            <div>
+              <strong>{{ scan()!.riskLevel || 'Unrated' }} risk</strong>
+              <span class="text-muted"> · {{ scan()!.fileCount || 0 }} files · {{ scan()!.totalIssues }} findings</span>
+              @if (scan()!.previousScore !== null && scan()!.previousScore !== undefined) {
+                <span class="text-muted"> · previous {{ scan()!.previousScore }} ({{ scan()!.scoreChange }})</span>
+              }
+            </div>
+            <div class="scan-tech">{{ (scan()!.technologies || []).join(', ') || 'No technologies detected' }}</div>
+          </div>
+          <p class="scan-note">{{ scan()!.scoringNote }}</p>
+        </div>
+
+        <div class="scan-filters" role="group" aria-label="Filter by severity">
+          @for (sev of severityFilters; track sev) {
+            <button class="btn" [class.btn-primary]="severity() === sev" [class.btn-outline-secondary]="severity() !== sev" type="button" (click)="severity.set(sev)">{{ sev }}</button>
+          }
+        </div>
+
+        @for (issue of visible(); track issue.id || issue.title + issue.filePath) {
+          <article class="pf-card finding">
+            <div class="finding__head">
+              <button class="finding__title" type="button" (click)="open.set(open() === issue.id ? null : (issue.id ?? null))">
+                {{ issue.title }}
+              </button>
+              <span class="badge text-bg-secondary">{{ issue.severity }}</span>
+            </div>
+            <p class="finding__meta">{{ issue.category }} · {{ issue.confidence || 'High' }} confidence · {{ issue.filePath }}:{{ issue.lineNumber }} · {{ issue.status || 'Open' }}</p>
+            @if (open() === issue.id) {
+              <p class="finding__body">{{ issue.description }}</p>
+              <p><strong>Impact.</strong> {{ issue.impact }}</p>
+              <p><strong>Evidence.</strong> {{ issue.evidence || 'No raw secret is stored.' }}</p>
+              <p><strong>Fix.</strong> {{ issue.remediation || issue.fixSuggestion }}</p>
+              @if (issue.cwe || issue.cve) { <p>{{ issue.cwe }} {{ issue.cve }}</p> }
+              @if (issue.references) { <p><strong>References.</strong> {{ issue.references }}</p> }
+              @if (issue.secureExample) { <pre>{{ issue.secureExample }}</pre> }
+              <div class="finding__actions">
+                <button class="btn btn-outline-success" type="button" (click)="setStatus(issue, 'Resolved')">Resolve</button>
+                <button class="btn btn-outline-secondary" type="button" (click)="setStatus(issue, 'AcceptedRisk')">Accept risk</button>
+                <button class="btn btn-outline-primary" type="button" (click)="setStatus(issue, 'Open')">Reopen</button>
+                <a
+                  class="btn btn-primary finding__ask"
+                  [routerLink]="['/assistant']"
+                  [queryParams]="{ scanResultId: scan()!.scanResultId, findingId: issue.id }">
+                  Ask assistant
+                </a>
+              </div>
+            }
+          </article>
+        } @empty {
+          <p class="text-muted">No findings for this filter.</p>
         }
       </div>
-
-      @for (issue of visible(); track issue.id || issue.title + issue.filePath) {
-        <article class="pf-card mb-2">
-          <div class="d-flex justify-content-between gap-2">
-            <button class="btn btn-link p-0 text-start" type="button" (click)="open.set(open() === issue.id ? null : (issue.id ?? null))">
-              <strong>{{ issue.title }}</strong>
-            </button>
-            <span class="badge text-bg-secondary">{{ issue.severity }}</span>
-          </div>
-          <p class="small text-muted mb-0">{{ issue.category }} · {{ issue.confidence || 'High' }} confidence · {{ issue.filePath }}:{{ issue.lineNumber }} · {{ issue.status || 'Open' }}</p>
-          @if (open() === issue.id) {
-            <p class="mt-2 mb-1">{{ issue.description }}</p>
-            <p class="small mb-1"><strong>Impact.</strong> {{ issue.impact }}</p>
-            <p class="small mb-1"><strong>Evidence.</strong> {{ issue.evidence || 'No raw secret is stored.' }}</p>
-            <p class="small mb-1"><strong>Fix.</strong> {{ issue.remediation || issue.fixSuggestion }}</p>
-            @if (issue.cwe || issue.cve) { <p class="small mb-1">{{ issue.cwe }} {{ issue.cve }}</p> }
-            @if (issue.references) { <p class="small mb-1"><strong>References.</strong> {{ issue.references }}</p> }
-            @if (issue.secureExample) { <pre class="small mb-2">{{ issue.secureExample }}</pre> }
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-success" type="button" (click)="setStatus(issue, 'Resolved')">Resolve</button>
-              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="setStatus(issue, 'AcceptedRisk')">Accept risk</button>
-              <button class="btn btn-sm btn-outline-primary" type="button" (click)="setStatus(issue, 'Open')">Reopen</button>
-            </div>
-          }
-        </article>
-      } @empty {
-        <p class="text-muted">No findings for this filter.</p>
-      }
     }
-  `
+  `,
+  styles: [`
+    :host { display: block; min-width: 0; max-width: 100%; }
+    .scan-page { min-width: 0; max-width: 100%; }
+    .scan-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.9rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .scan-head__copy { flex: 1 1 18rem; min-width: 0; }
+    .scan-head h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .scan-meta, .scan-url, .scan-note, .scan-tech, .finding__meta, .finding p {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .scan-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.7rem;
+      margin: 0;
+      color: var(--pf-text-muted);
+      font-size: 0.84rem;
+    }
+    .scan-meta span:not(:last-child)::after { content: "·"; margin-left: 0.7rem; }
+    .scan-url {
+      margin: 0.35rem 0 0;
+      color: var(--pf-text-muted);
+      font-size: 0.8rem;
+    }
+    .scan-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex: 1 1 26rem;
+      min-width: min(100%, 26rem);
+    }
+    .scan-exports { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 0 0 auto; }
+    .scan-ask { flex: 0 0 auto; }
+    .scan-exports .btn, .scan-ask, .scan-filters .btn, .finding__actions .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scan-ask {
+      gap: 0.4rem;
+      padding-inline: 0.95rem;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+    .scan-scores {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.35fr) repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .scan-scores > * { display: block; min-width: 0; height: 100%; }
+    .scan-summary { margin-bottom: 0.85rem; }
+    .scan-summary__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 0.45rem 1rem;
+    }
+    .scan-tech { color: var(--pf-text); font-size: 0.84rem; flex: 1 1 12rem; text-align: right; }
+    .scan-note { margin: 0.6rem 0 0; color: var(--pf-text-muted); font-size: 0.84rem; }
+    .scan-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+    .finding { margin-bottom: 0.55rem; }
+    .finding__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .finding__title {
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--pf-text);
+      font-weight: 700;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+    .finding__title:hover { color: var(--pf-primary); }
+    .finding__head .badge { flex: none; margin-top: 0.15rem; }
+    .finding__meta { margin: 0.35rem 0 0; color: var(--pf-text-muted); font-size: 0.8rem; }
+    .finding__body { margin: 0.75rem 0 0.35rem; }
+    .finding p { margin: 0 0 0.35rem; font-size: 0.9rem; }
+    .finding pre {
+      margin: 0 0 0.7rem;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 0.8rem;
+    }
+    .finding__actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.35rem; }
+    .finding__ask { font-weight: 700; }
+    @media (max-width: 1199px) {
+      .scan-scores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .scan-scores > :first-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 767px) {
+      .scan-actions { justify-content: stretch; }
+      .scan-exports { flex: 1 1 auto; }
+      .scan-exports .btn { flex: 1 1 0; }
+      .scan-ask { flex: 1 1 12rem; }
+      .scan-tech { text-align: left; }
+    }
+    @media (max-width: 575px) {
+      .scan-head { gap: 0.75rem; }
+      .scan-actions, .scan-exports, .scan-ask, .finding__ask { width: 100%; }
+      .scan-ask { min-height: 44px; }
+      .scan-scores { grid-template-columns: 1fr 1fr; }
+      .finding__actions .btn { flex: 1 1 calc(50% - 0.45rem); }
+      .finding__actions .finding__ask { flex: 1 1 100%; min-height: 44px; }
+    }
+    @media (max-width: 380px) {
+      .scan-scores { grid-template-columns: 1fr; }
+      .scan-scores > :first-child { grid-column: auto; }
+      .scan-exports { flex-direction: column; }
+      .finding__actions .btn { flex-basis: 100%; }
+    }
+  `]
 })
 export class ScanDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
