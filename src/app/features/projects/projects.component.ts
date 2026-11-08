@@ -62,62 +62,77 @@ import { ScanProgressComponent } from '../../shared/components/scan-progress/sca
         message="Loading the latest scan status for every project." />
       <app-skeleton-loader [count]="6" [columns]="3" [height]="160" />
     } @else {
-      <div class="row g-3">
+      <div class="project-grid">
         @for (p of filtered(); track p.projectId) {
-          <div class="col-md-6 col-xl-4">
-            <div class="pf-card project-card h-100" [class.is-checking]="isChecking(p)">
-              <div class="d-flex justify-content-between mb-2 gap-2">
-                <div class="d-flex align-items-center gap-2 min-w-0">
-                  <div class="project-avatar">{{ initials(p.fileName) }}</div>
-                  <h2 class="h6 mb-0 text-truncate">{{ p.fileName }}</h2>
-                </div>
-                <span class="badge flex-shrink-0" [class]="healthClass(p)">
-                  @if (isChecking(p)) {
-                    <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-                  }
-                  {{ isChecking(p) ? 'Checking' : health(p) }}
-                </span>
-              </div>
-              <p class="small text-muted mb-2">
-                Last scan: {{ p.uploadedAt | date:'medium' }} · {{ p.scanCount }} scan(s)
-              </p>
-              <div class="row g-2 small mb-2">
-                <div class="col-6">Risk: <strong>{{ p.latestScore }}/100</strong></div>
-                <div class="col-6 text-end">{{ p.issueCount }} issues</div>
-                <div class="col-6">Security: {{ p.latestSecurityScore ?? '—' }}</div>
-                <div class="col-6 text-end">Trend: {{ p.trend }}</div>
-              </div>
-              <div class="progress mb-3" style="height: 6px;">
-                <div class="progress-bar" [style.width.%]="p.latestScore"
-                     [class.bg-success]="p.latestScore >= 80"
-                     [class.bg-warning]="p.latestScore >= 60 && p.latestScore < 80"
-                     [class.bg-danger]="p.latestScore < 60"></div>
-              </div>
-              <div class="d-flex gap-2 flex-wrap">
-                @if (p.repositoryUrl) {
-                  <button class="btn btn-primary btn-sm" type="button" [disabled]="isChecking(p)" (click)="scanAgain(p)">
-                    @if (isChecking(p)) { Scanning… } @else { Scan again }
-                  </button>
+          <article class="pf-card project-card" [class.is-checking]="isChecking(p)">
+            <div class="project-head">
+              <div class="project-avatar" aria-hidden="true">{{ initials(p.fileName) }}</div>
+              <h2 class="project-name">{{ p.fileName }}</h2>
+              <span class="health-pill" [class]="healthClass(p)">
+                @if (isChecking(p)) {
+                  <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                 }
-                @if (p.latestScanResultId) {
-                  <a [routerLink]="['/scans', p.latestScanResultId]" class="btn btn-outline-primary btn-sm">Open</a>
-                  <a [routerLink]="['/architecture']" [queryParams]="{ scanId: p.latestScanResultId }" class="btn btn-outline-secondary btn-sm">Architecture</a>
-                  <a [routerLink]="['/assistant']" [queryParams]="{ scanResultId: p.latestScanResultId }" class="btn btn-outline-secondary btn-sm">Copilot</a>
-                }
-                <a [routerLink]="['/vulnerabilities']" [queryParams]="{ projectId: p.projectId }" class="btn btn-outline-secondary btn-sm">Security</a>
-                <a [routerLink]="['/quality']" [queryParams]="{ projectId: p.projectId }" class="btn btn-outline-secondary btn-sm">Quality</a>
-              </div>
+                {{ isChecking(p) ? 'Checking' : health(p) }}
+              </span>
             </div>
-          </div>
+            <p class="project-meta">
+              Last scan {{ p.uploadedAt | date:'medium' }} · {{ p.scanCount }} scan(s)
+            </p>
+            <div class="project-stats">
+              <span>Risk <strong>{{ p.latestScore }}/100</strong></span>
+              <span>{{ p.issueCount }} issues</span>
+              <span>Security <strong>{{ p.latestSecurityScore ?? '—' }}</strong></span>
+              <span>Trend <strong>{{ p.trend }}</strong></span>
+            </div>
+            <div class="progress project-meter" aria-hidden="true">
+              <div class="progress-bar" [style.width.%]="p.latestScore"
+                   [class.bg-success]="p.latestScore >= 80"
+                   [class.bg-warning]="p.latestScore >= 60 && p.latestScore < 80"
+                   [class.bg-danger]="p.latestScore < 60"></div>
+            </div>
+            <div class="project-actions">
+              @if (p.repositoryUrl) {
+                <button class="act act-primary" type="button" [disabled]="isChecking(p)" (click)="scanAgain(p)">
+                  @if (isChecking(p)) {
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span>Scanning</span>
+                  } @else {
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>Scan again</span>
+                  }
+                </button>
+              }
+              @if (p.latestScanResultId) {
+                <a [routerLink]="['/scans', p.latestScanResultId]" class="act act-accent">
+                  <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                  <span>Open</span>
+                </a>
+                <a [routerLink]="['/architecture']" [queryParams]="{ scanId: p.latestScanResultId }" class="act">
+                  <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span>Architecture</span>
+                </a>
+                <a [routerLink]="['/assistant']" [queryParams]="{ scanResultId: p.latestScanResultId }" class="act">
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  <span>Copilot</span>
+                </a>
+              }
+              <a [routerLink]="['/vulnerabilities']" [queryParams]="{ projectId: p.projectId }" class="act">
+                <i class="bi bi-shield-check" aria-hidden="true"></i>
+                <span>Security</span>
+              </a>
+              <a [routerLink]="['/quality']" [queryParams]="{ projectId: p.projectId }" class="act">
+                <i class="bi bi-patch-check" aria-hidden="true"></i>
+                <span>Quality</span>
+              </a>
+            </div>
+          </article>
         } @empty {
-          <div class="col-12">
-            <app-empty-state
-              title="No projects yet"
-              message="Upload a ZIP to start scanning your first codebase."
-              actionLabel="Upload ZIP"
-              actionRoute="/upload"
-              icon="bi-folder2-open" />
-          </div>
+          <app-empty-state
+            title="No projects yet"
+            message="Upload a ZIP to start scanning your first codebase."
+            actionLabel="Upload ZIP"
+            actionRoute="/upload"
+            icon="bi-folder2-open" />
         }
       </div>
       @if (active()) {
@@ -131,15 +146,148 @@ import { ScanProgressComponent } from '../../shared/components/scan-progress/sca
     }
   `,
   styles: [`
-    .project-card { transition: transform .2s, box-shadow .2s; min-width: 0; }
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: 1rem;
+      min-width: 0;
+    }
+    .project-grid > app-empty-state { grid-column: 1 / -1; }
+    .project-card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100%;
+      container-type: inline-size;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .project-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(96, 165, 250, 0.38);
+    }
     .project-card.is-checking { outline: 2px solid rgba(37, 99, 235, 0.45); }
+    .project-head {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+      margin-bottom: 0.55rem;
+    }
     .project-avatar {
-      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 10px; flex: none;
       display: grid; place-items: center; font-size: .75rem; font-weight: 700;
       background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff;
     }
-    @media (max-width: 575px) {
-      .project-card .btn { flex: 1 1 auto; }
+    .project-name {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .health-pill {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      max-width: 46%;
+      border-radius: 999px;
+      padding: 0.28rem 0.55rem;
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .project-meta {
+      margin: 0 0 0.65rem;
+      color: var(--pf-text-muted);
+      font-size: 0.78rem;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .project-stats {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0.28rem 0.75rem;
+      margin-bottom: 0.7rem;
+      color: var(--pf-text-muted);
+      font-size: 0.8rem;
+    }
+    .project-stats strong { color: var(--pf-text); font-weight: 700; }
+    .project-stats span:nth-child(even) { text-align: right; }
+    .project-meter { height: 6px; margin-bottom: 0.9rem; }
+    .project-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin-top: auto;
+    }
+    .act {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      min-width: 0;
+      min-height: 2.2rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 11px;
+      border: 1px solid var(--pf-border);
+      background: rgba(148, 163, 184, 0.07);
+      color: var(--pf-text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.1;
+      text-decoration: none;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .act i, .act .spinner-border { flex: none; font-size: 0.92rem; }
+    .act span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .act:hover {
+      transform: translateY(-1px);
+      background: rgba(37, 99, 235, 0.16);
+      border-color: rgba(96, 165, 250, 0.5);
+      color: var(--pf-text);
+    }
+    .act:focus-visible {
+      outline: 2px solid #60a5fa;
+      outline-offset: 2px;
+    }
+    .act-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.28);
+    }
+    .act-primary:hover { color: #fff; background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+    .act-primary:disabled {
+      opacity: 0.72;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .act-accent {
+      color: #93c5fd;
+      border-color: rgba(96, 165, 250, 0.45);
+      background: rgba(37, 99, 235, 0.12);
+    }
+    :host-context(body.theme-light) .act-accent { color: #1d4ed8; }
+    @container (max-width: 439px) {
+      .project-actions .act:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
+    @container (min-width: 440px) {
+      .project-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .project-actions .act:last-child:nth-child(3n + 1):nth-last-child(1) { grid-column: 1 / -1; }
+    }
+    @container (max-width: 230px) {
+      .project-actions { grid-template-columns: 1fr; }
+      .health-pill { max-width: 100%; }
     }
   `]
 })

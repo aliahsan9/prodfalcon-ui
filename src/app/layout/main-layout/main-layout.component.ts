@@ -34,11 +34,14 @@ import { ShellService } from '../../core/services/shell.service';
     }
     .app-main {
       margin-left: var(--pf-sidebar-width);
-      transition: margin-left 0.2s ease;
+      transition: margin-left 0.2s ease, width 0.2s ease;
       min-width: 0;
-      width: 100%;
+      width: calc(100% - var(--pf-sidebar-width));
     }
-    .collapsed .app-main { margin-left: var(--pf-sidebar-collapsed); }
+    .collapsed .app-main {
+      margin-left: var(--pf-sidebar-collapsed);
+      width: calc(100% - var(--pf-sidebar-collapsed));
+    }
     .app-content {
       min-width: 0;
       max-width: 100%;
@@ -52,7 +55,7 @@ import { ShellService } from '../../core/services/shell.service';
       -webkit-tap-highlight-color: transparent;
     }
     @media (max-width: 991px) {
-      .app-main, .collapsed .app-main { margin-left: 0; }
+      .app-main, .collapsed .app-main { margin-left: 0; width: 100%; }
     }
     @media (max-width: 575px) {
       .app-content { padding: 0.15rem 0.75rem 1rem; }
