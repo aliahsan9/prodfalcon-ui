@@ -89,6 +89,7 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
             <p class="small mb-1"><strong>Evidence.</strong> {{ issue.evidence || 'No raw secret is stored.' }}</p>
             <p class="small mb-1"><strong>Fix.</strong> {{ issue.remediation || issue.fixSuggestion }}</p>
             @if (issue.cwe || issue.cve) { <p class="small mb-1">{{ issue.cwe }} {{ issue.cve }}</p> }
+            @if (issue.references) { <p class="small mb-1"><strong>References.</strong> {{ issue.references }}</p> }
             @if (issue.secureExample) { <pre class="small mb-2">{{ issue.secureExample }}</pre> }
             <div class="d-flex gap-2">
               <button class="btn btn-sm btn-outline-success" type="button" (click)="setStatus(issue, 'Resolved')">Resolve</button>
