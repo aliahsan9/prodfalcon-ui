@@ -244,8 +244,10 @@ export class SidebarComponent {
     { label: 'Reports', icon: 'bi-file-earmark-bar-graph', route: '/reports' },
     { label: 'Vulnerabilities', icon: 'bi-bug', route: '/vulnerabilities' },
     { label: 'AI Assistant', icon: 'bi-robot', route: '/assistant', badge: 'Beta' },
-    { label: 'Integrations', icon: 'bi-puzzle', route: '/integrations' },
-    { label: 'Settings', icon: 'bi-gear', route: '/settings' }
+    { label: 'Integrations', icon: 'bi-github', route: '/integrations' },
+    { label: 'Analytics', icon: 'bi-graph-up', route: '/analytics' },
+    { label: 'Team', icon: 'bi-people', route: '/team' },
+    { label: 'Policies', icon: 'bi-sliders', route: '/policies' }
   ];
 
   readonly moreNav: NavItem[] = [
@@ -253,7 +255,8 @@ export class SidebarComponent {
     { label: 'Code Quality', icon: 'bi-tools', route: '/quality' },
     { label: 'Architecture', icon: 'bi-diagram-3', route: '/architecture' },
     { label: 'Threat Modeling', icon: 'bi-shield-exclamation', route: '/threats' },
-    { label: 'Remediation', icon: 'bi-check2-square', route: '/remediation' }
+    { label: 'Remediation', icon: 'bi-check2-square', route: '/ai-suggestions' },
+    { label: 'Settings', icon: 'bi-gear', route: '/settings' }
   ];
 
   @HostListener('window:resize')

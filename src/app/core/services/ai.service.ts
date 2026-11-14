@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AiSuggestionCard, AiSuggestions } from '../models/ai.model';
+import { AiSuggestionCard, AiSuggestions, RemediationPlan, RemediationProposal } from '../models/ai.model';
 import { ApiResponse } from '../models/api-response.model';
 
 @Injectable({ providedIn: 'root' })
@@ -11,6 +11,18 @@ export class AiService {
 
   getSuggestions(scanResultId: number): Observable<ApiResponse<AiSuggestions>> {
     return this.http.post<ApiResponse<AiSuggestions>>(`${environment.apiUrl}/ai/suggestions`, { scanResultId });
+  }
+
+  getRemediation(scanResultId: number): Observable<ApiResponse<RemediationPlan>> {
+    return this.http.get<ApiResponse<RemediationPlan>>(`${environment.apiUrl}/ai/remediation/${scanResultId}`);
+  }
+
+  buildRemediation(scanResultId: number): Observable<ApiResponse<RemediationPlan>> {
+    return this.http.post<ApiResponse<RemediationPlan>>(`${environment.apiUrl}/ai/remediation`, { scanResultId });
+  }
+
+  decideRemediation(proposalId: number, decision: 'Approved' | 'Rejected', note?: string): Observable<ApiResponse<RemediationProposal>> {
+    return this.http.post<ApiResponse<RemediationProposal>>(`${environment.apiUrl}/ai/remediation/${proposalId}/decision`, { decision, note });
   }
 
   toCards(data: AiSuggestions): AiSuggestionCard[] {

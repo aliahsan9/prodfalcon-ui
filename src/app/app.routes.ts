@@ -43,6 +43,13 @@ export const routes: Routes = [
             .then(m => m.RegisterComponent)
       },
 
+      {
+        path: 'invite',
+        loadComponent: () =>
+          import('./features/auth/invite/invite.component')
+            .then(m => m.InviteComponent)
+      },
+
       // /auth → /auth/login
       {
         path: '',
@@ -147,6 +154,27 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/integrations/integrations.component')
             .then(m => m.IntegrationsComponent)
+      },
+
+      {
+        path: 'analytics',
+        loadComponent: () =>
+          import('./features/analytics/analytics.component')
+            .then(m => m.AnalyticsComponent)
+      },
+
+      {
+        path: 'team',
+        loadComponent: () =>
+          import('./features/team/team.component')
+            .then(m => m.TeamComponent)
+      },
+
+      {
+        path: 'policies',
+        loadComponent: () =>
+          import('./features/policies/policies.component')
+            .then(m => m.PoliciesComponent)
       },
 
       {

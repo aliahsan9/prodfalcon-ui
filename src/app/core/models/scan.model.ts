@@ -8,6 +8,7 @@ export interface ScanIssue {
   category: string;
   description?: string;
   lineNumber?: number;
+  columnNumber?: number;
   confidence?: string;
   cwe?: string;
   cve?: string;

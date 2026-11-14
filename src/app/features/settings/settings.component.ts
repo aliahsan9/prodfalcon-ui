@@ -4,12 +4,13 @@ import { ThemeService, ThemeMode } from '../../core/services/theme.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LoggerService } from '../../core/services/logger.service';
+import { RouterLink } from '@angular/router';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent],
+  imports: [FormsModule, RouterLink, PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-page-header
@@ -21,7 +22,8 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
         <div class="pf-card h-100">
           <h2 class="h6 mb-3">Profile</h2>
           <p class="small text-muted mb-2">Signed in as</p>
-          <p class="fw-semibold mb-0">{{ auth.userEmail() }}</p>
+          <p class="fw-semibold mb-1">{{ auth.userEmail() }}</p>
+          <p class="small mb-0">{{ auth.organization() || 'Workspace' }} · {{ auth.role() || 'Member' }}</p>
         </div>
       </div>
 
@@ -46,6 +48,19 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
               (click)="setTheme('light')">
               <i class="bi bi-sun-fill me-1"></i> Light
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="pf-card">
+          <h2 class="h6 mb-2">Workspace</h2>
+          <p class="small text-muted">GitHub, teammates, and the quality gate live with the rest of this workspace.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary btn-sm" routerLink="/integrations">GitHub</a>
+            <a class="btn btn-outline-primary btn-sm" routerLink="/team">Team</a>
+            <a class="btn btn-outline-primary btn-sm" routerLink="/policies">Quality gate</a>
+            <a class="btn btn-outline-primary btn-sm" routerLink="/analytics">Analytics</a>
           </div>
         </div>
       </div>

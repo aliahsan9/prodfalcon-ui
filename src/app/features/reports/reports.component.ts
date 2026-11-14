@@ -27,21 +27,21 @@ Chart.register(...registerables);
   template: `
     <app-page-header
       title="Reports & analytics"
-      subtitle="Risk analytics, severity mix, and rule violation breakdown"
+      subtitle="Security audit PDFs, severity mix, and rule breakdown"
       actionLabel="New scan"
       actionRoute="/scans/new"
       actionIcon="bi-shield-plus" />
 
     <div class="pf-card mb-3">
       <h2 class="h6">Download a scan report</h2>
-      <p class="small text-muted">JSON, CSV, and PDF are generated from the saved scan. Secret values are redacted.</p>
+      <p class="small text-muted">JSON and CSV list every finding with file, line, and column. The audit PDF adds an explanation and a suggested patch. Secret values are redacted.</p>
       @for (item of downloads(); track item.scanResultId) {
         <div class="d-flex justify-content-between align-items-center gap-2 py-1 border-bottom">
           <span class="text-truncate">{{ item.projectName }} · {{ item.score }}/100</span>
           <span class="d-flex gap-1">
             <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'json', item.projectName)">JSON</button>
             <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'csv', item.projectName)">CSV</button>
-            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'pdf', item.projectName)">PDF</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="download(item.scanResultId, 'pdf', item.projectName)">Audit PDF</button>
           </span>
         </div>
       } @empty {

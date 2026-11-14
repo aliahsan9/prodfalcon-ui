@@ -68,6 +68,10 @@ export class AuthService {
     );
   }
 
+  startSession(data: AuthResponse): void {
+    this.persist(data);
+  }
+
   logout(): void {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem('prodfalcon-token');

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { ScoreCardComponent } from '../../../shared/components/score-card/score-card.component';
@@ -6,13 +7,14 @@ import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loa
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { ScanProgressComponent } from '../../../shared/components/scan-progress/scan-progress.component';
 import { ScanService } from '../../../core/services/scan.service';
+import { CollaborationNote, PlatformService } from '../../../core/services/platform.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
 
 @Component({
   selector: 'app-scan-detail',
   standalone: true,
-  imports: [RouterLink, ScoreCardComponent, SkeletonLoaderComponent, EmptyStateComponent, ScanProgressComponent],
+  imports: [DatePipe, RouterLink, ScoreCardComponent, SkeletonLoaderComponent, EmptyStateComponent, ScanProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (running() || (loading() && !scan())) {
@@ -95,7 +97,7 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
               </button>
               <span class="badge text-bg-secondary">{{ issue.severity }}</span>
             </div>
-            <p class="finding__meta">{{ issue.category }} · {{ issue.confidence || 'High' }} confidence · {{ issue.filePath }}:{{ issue.lineNumber }} · {{ issue.status || 'Open' }}</p>
+            <p class="finding__meta">{{ issue.category }} · {{ issue.confidence || 'High' }} confidence · {{ location(issue) }} · {{ issue.status || 'Open' }}</p>
             @if (open() === issue.id) {
               <p class="finding__body">{{ issue.description }}</p>
               <p><strong>Impact.</strong> {{ issue.impact }}</p>
@@ -114,12 +116,38 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
                   [queryParams]="{ scanResultId: scan()!.scanResultId, findingId: issue.id }">
                   Ask assistant
                 </a>
+                <a
+                  class="btn btn-outline-primary"
+                  [routerLink]="['/ai-suggestions']"
+                  [queryParams]="{ scanResultId: scan()!.scanResultId }">
+                  Review patch
+                </a>
               </div>
             }
           </article>
         } @empty {
           <p class="text-muted">No findings for this filter.</p>
         }
+
+        <section class="pf-card mt-3">
+          <h2 class="h6">Team notes</h2>
+          <p class="small text-muted">Leave a note for the people reviewing this scan. Viewers can read notes.</p>
+          @if (canComment()) {
+            <textarea class="form-control mb-2" rows="3" [value]="noteDraft()" (input)="noteDraft.set(text($event))" placeholder="What should the team look at?"></textarea>
+            <button class="btn btn-primary btn-sm" type="button" (click)="addNote()" [disabled]="noteBusy()">Add note</button>
+          }
+          <div class="mt-3">
+            @for (note of notes(); track note.id) {
+              <article class="note">
+                <strong>{{ note.authorName }}</strong>
+                <span class="text-muted small">{{ note.createdAt | date:'medium' }}</span>
+                <p class="mb-0">{{ note.body }}</p>
+              </article>
+            } @empty {
+              <p class="text-muted mb-0">No notes on this scan yet.</p>
+            }
+          </div>
+        </section>
       </div>
     }
   `,
@@ -236,6 +264,8 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
       font-size: 0.8rem;
     }
     .finding__actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.35rem; }
+    .note { padding: 0.7rem 0; border-top: 1px solid var(--pf-border); }
+    .note span { margin-left: 0.45rem; }
     .finding__ask { font-weight: 700; }
     @media (max-width: 1199px) {
       .scan-scores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -267,6 +297,7 @@ import { ScanIssue, ScanResult } from '../../../core/models/scan.model';
 export class ScanDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly scans = inject(ScanService);
+  private readonly platform = inject(PlatformService);
   private readonly toast = inject(ToastService);
   private poll?: Subscription;
 
@@ -279,9 +310,15 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
   readonly severity = signal('All');
   readonly open = signal<number | null>(null);
   readonly severityFilters = ['All', 'Critical', 'High', 'Medium', 'Low', 'Info'];
+  readonly notes = signal<CollaborationNote[]>([]);
+  readonly noteDraft = signal('');
+  readonly noteBusy = signal(false);
+  readonly canComment = signal(false);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.canComment.set(this.platform.canScan());
+    this.loadNotes(id);
     this.poll = timer(0, 1500).pipe(
       switchMap(() => this.scans.getScan(id)),
       takeWhile((response) => ['Queued', 'Scanning'].includes(response.data?.status), true)
@@ -301,6 +338,11 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
     return issues.filter((issue) => issue.severity.toLowerCase() === severity.toLowerCase());
   }
 
+  location(issue: ScanIssue): string {
+    const column = issue.columnNumber ? `:${issue.columnNumber}` : '';
+    return `${issue.filePath}:${issue.lineNumber || 1}${column}`;
+  }
+
   setStatus(issue: ScanIssue, status: string): void {
     if (!issue.id) return;
     this.scans.updateFinding(issue.id, status, '').subscribe({
@@ -315,6 +357,26 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  addNote(): void {
+    const id = this.scan()?.scanResultId ?? Number(this.route.snapshot.paramMap.get('id'));
+    const body = this.noteDraft().trim();
+    if (!id || body.length < 2) return;
+    this.noteBusy.set(true);
+    this.platform.addNote(body, id).subscribe({
+      next: () => {
+        this.noteDraft.set('');
+        this.noteBusy.set(false);
+        this.toast.success('Note saved.');
+        this.loadNotes(id);
+      },
+      error: () => this.noteBusy.set(false)
+    });
+  }
+
+  text(event: Event): string {
+    return (event.target as HTMLTextAreaElement).value;
   }
 
   cancel(): void {
@@ -335,6 +397,13 @@ export class ScanDetailComponent implements OnInit, OnDestroy {
       anchor.download = `${scan.projectName || 'scan'}-security.${format}`;
       anchor.click();
       URL.revokeObjectURL(url);
+    });
+  }
+
+  private loadNotes(scanResultId: number): void {
+    if (!scanResultId) return;
+    this.platform.notes(scanResultId).subscribe({
+      next: (response) => this.notes.set(response.data ?? [])
     });
   }
 

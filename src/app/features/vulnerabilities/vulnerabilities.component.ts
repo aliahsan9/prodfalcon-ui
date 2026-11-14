@@ -51,7 +51,7 @@ import { ScanIssue } from '../../core/models/scan.model';
           <button class="btn btn-link p-0 text-start" type="button" (click)="selected.set(selected() === issue.id ? null : (issue.id ?? null))">
             <strong>{{ issue.title }}</strong>
           </button>
-          <div class="small text-muted">{{ issue.severity }} · {{ issue.status || 'Open' }} · {{ issue.category }} · {{ issue.filePath }}:{{ issue.lineNumber }}</div>
+          <div class="small text-muted">{{ issue.severity }} · {{ issue.status || 'Open' }} · {{ issue.category }} · {{ location(issue) }}</div>
           @if (selected() === issue.id) {
             <p class="mt-2 mb-1">{{ issue.description }}</p>
             <p class="small mb-1">{{ issue.impact }}</p>
@@ -94,6 +94,11 @@ export class VulnerabilitiesComponent implements OnInit {
     category: '',
     q: ''
   });
+
+  location(issue: ScanIssue): string {
+    const column = issue.columnNumber ? `:${issue.columnNumber}` : '';
+    return `${issue.filePath}:${issue.lineNumber || 1}${column}`;
+  }
 
   ngOnInit(): void {
     const path = this.route.snapshot.routeConfig?.path ?? 'vulnerabilities';

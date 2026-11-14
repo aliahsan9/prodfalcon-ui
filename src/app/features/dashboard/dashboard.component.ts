@@ -71,6 +71,10 @@ interface VulnSlice {
           message="Submit a GitHub repository or ZIP archive to generate the first evidence-based assessment."
           actionLabel="New scan"
           actionRoute="/scans/new" />
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+          <a class="btn btn-outline-primary btn-sm" routerLink="/integrations">Connect GitHub</a>
+          <a class="btn btn-outline-secondary btn-sm" routerLink="/team">Invite your team</a>
+        </div>
       } @else {
         @let scans = scanSeries();
         @let scores = scoreSeries();
@@ -117,6 +121,13 @@ interface VulnSlice {
             <div class="float-laptop"><span></span><span></span><span></span></div>
           </div>
         </section>
+
+        <nav class="d-flex flex-wrap gap-2 mb-3" aria-label="Workspace shortcuts">
+          <a class="btn btn-sm btn-outline-primary" routerLink="/integrations"><i class="bi bi-github me-1"></i>GitHub</a>
+          <a class="btn btn-sm btn-outline-primary" routerLink="/analytics"><i class="bi bi-graph-up me-1"></i>Analytics</a>
+          <a class="btn btn-sm btn-outline-primary" routerLink="/policies"><i class="bi bi-sliders me-1"></i>Quality gate</a>
+          <a class="btn btn-sm btn-outline-primary" routerLink="/team"><i class="bi bi-people me-1"></i>Team</a>
+        </nav>
 
         <section class="stat-grid">
           <a class="stat-card stat-card--blue" routerLink="/projects">

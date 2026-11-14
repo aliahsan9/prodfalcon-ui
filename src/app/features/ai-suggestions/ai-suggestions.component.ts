@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { ActivatedRoute } from '@angular/router';
 import { AiService } from '../../core/services/ai.service';
 import { BillingService } from '../../core/services/billing.service';
-import { AiSuggestionCard } from '../../core/models/ai.model';
+import { AiSuggestionCard, RemediationProposal } from '../../core/models/ai.model';
 import { UpgradeBannerComponent } from '../../shared/components/upgrade-banner/upgrade-banner.component';
 import { LockedFeatureComponent } from '../../shared/components/locked-feature/locked-feature.component';
 
@@ -12,8 +12,8 @@ import { LockedFeatureComponent } from '../../shared/components/locked-feature/l
   imports: [UpgradeBannerComponent, LockedFeatureComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1 class="h3 mb-1 pf-page-title">AI code suggestions</h1>
-    <p class="text-muted mb-3 mb-md-4">Premium remediation powered by OpenAI</p>
+    <h1 class="h3 mb-1 pf-page-title">Remediation</h1>
+    <p class="text-muted mb-3 mb-md-4">Explanations and reviewable patches grounded in stored findings. Approval records a decision and does not modify the repository.</p>
 
     @if (!billing.isProFeature()) {
       <app-upgrade-banner class="mb-4 d-block" />
@@ -24,9 +24,46 @@ import { LockedFeatureComponent } from '../../shared/components/locked-feature/l
         <label class="form-label">Scan result ID</label>
         <div class="d-flex flex-column flex-sm-row gap-2">
           <input type="number" class="form-control" [value]="scanResultId()" (change)="setId($event)" />
-          <button class="btn btn-primary flex-shrink-0" (click)="load()" [disabled]="loading()">Generate</button>
+          <button class="btn btn-primary flex-shrink-0" (click)="load()" [disabled]="loading()">Suggestions</button>
+          <button class="btn btn-outline-primary flex-shrink-0" (click)="buildPatches()" [disabled]="loading()">Build patches</button>
         </div>
       </div>
+
+      @if (planSummary()) {
+        <div class="pf-card mb-3">
+          <p class="mb-0">{{ planSummary() }}</p>
+        </div>
+      }
+
+      @for (proposal of proposals(); track proposal.id) {
+        <article class="pf-card mb-3">
+          <div class="d-flex justify-content-between gap-2 flex-wrap mb-2">
+            <strong>{{ proposal.title }}</strong>
+            <span class="badge text-bg-secondary">{{ proposal.status }}</span>
+          </div>
+          <p class="small text-muted mb-2">{{ proposal.severity }} · {{ proposal.filePath }}:{{ proposal.lineNumber }}{{ proposal.columnNumber ? ':' + proposal.columnNumber : '' }}</p>
+          <p>{{ proposal.explanation }}</p>
+          <p class="small"><strong>Secure change.</strong> {{ proposal.secureSuggestion }}</p>
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <div class="small text-muted mb-1">Cited line</div>
+              <pre class="code-snippet">{{ proposal.originalSnippet }}</pre>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="small text-muted mb-1">Suggested patch</div>
+              <pre class="code-snippet code-after">{{ proposal.patchedSnippet }}</pre>
+            </div>
+          </div>
+          <pre class="code-snippet mt-2">{{ proposal.diffText }}</pre>
+          <p class="small text-muted mt-2 mb-2">{{ proposal.grounding }}</p>
+          @if (proposal.status === 'Proposed') {
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-success" type="button" (click)="decide(proposal, 'Approved')">Approve</button>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="decide(proposal, 'Rejected')">Reject</button>
+            </div>
+          }
+        </article>
+      }
 
       @if (summary()) {
         <div class="pf-card mb-3 border-primary">
@@ -85,6 +122,8 @@ export class AiSuggestionsComponent implements OnInit {
   readonly scanResultId = signal(0);
   readonly cards = signal<AiSuggestionCard[]>([]);
   readonly summary = signal('');
+  readonly proposals = signal<RemediationProposal[]>([]);
+  readonly planSummary = signal('');
 
   ngOnInit(): void {
     this.billing.loadSubscription().subscribe();
@@ -92,6 +131,7 @@ export class AiSuggestionsComponent implements OnInit {
     if (q) {
       this.scanResultId.set(q);
       this.load();
+      this.buildPatches();
     }
   }
 
@@ -112,6 +152,31 @@ export class AiSuggestionsComponent implements OnInit {
         }
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  buildPatches(): void {
+    const id = this.scanResultId();
+    if (!id) return;
+    this.loading.set(true);
+    this.ai.buildRemediation(id).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        if (response.success) {
+          this.planSummary.set(response.data.summary);
+          this.proposals.set(response.data.proposals ?? []);
+        }
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  decide(proposal: RemediationProposal, decision: 'Approved' | 'Rejected'): void {
+    this.ai.decideRemediation(proposal.id, decision).subscribe({
+      next: (response) => {
+        if (!response.success) return;
+        this.proposals.update((items) => items.map((item) => item.id === proposal.id ? response.data : item));
+      }
     });
   }
 }
